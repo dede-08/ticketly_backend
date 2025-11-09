@@ -76,7 +76,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     history = TicketHistorySerializer(many=True, read_only=True)
     
-    # IDs para escritura
+    #IDs para escritura
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), 
         source='category', 

@@ -18,7 +18,7 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        # Generar tokens para el nuevo usuario
+        #generar tokens para el nuevo usuario
         refresh = RefreshToken.for_user(user)
         
         return Response({
@@ -57,7 +57,7 @@ class ChangePasswordView(generics.UpdateAPIView):
         
         user = request.user
         
-        # Verificar contraseña actual
+        #verificar contraseña actual
         if not user.check_password(serializer.validated_data['old_password']):
             return Response(
                 {'old_password': 'Contraseña incorrecta'}, 
