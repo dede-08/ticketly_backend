@@ -116,6 +116,23 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files (Uploads de usuarios)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Configuración de uploads
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+
+# Tipos de archivos permitidos
+ALLOWED_FILE_EXTENSIONS = [
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 
+    'jpg', 'jpeg', 'png', 'gif', 'bmp',
+    'txt', 'zip', 'rar'
+]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

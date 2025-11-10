@@ -1,15 +1,17 @@
-from django.shortcuts import render
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from .models import Ticket, Category, Priority, Status, Comment, TicketHistory
+from django.conf import settings
+import os
+from .models import Ticket, Category, Priority, Status, Comment, TicketHistory, Attachment
 from .serializers import (
     TicketListSerializer, TicketDetailSerializer, TicketCreateSerializer,
     CategorySerializer, PrioritySerializer, StatusSerializer,
-    CommentSerializer, TicketHistorySerializer
+    CommentSerializer, TicketHistorySerializer, AttachmentSerializer
 )
 
 

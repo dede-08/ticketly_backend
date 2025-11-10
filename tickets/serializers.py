@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Ticket, Category, Priority, Status, Comment, TicketHistory
+from .models import Ticket, Category, Priority, Status, Comment, TicketHistory, Attachment
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -76,7 +76,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     history = TicketHistorySerializer(many=True, read_only=True)
     
-    #IDs para escritura
+    # IDs para escritura
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), 
         source='category', 
