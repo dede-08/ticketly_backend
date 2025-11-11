@@ -48,6 +48,30 @@ class TicketHistorySerializer(serializers.ModelSerializer):
         fields = ['id', 'ticket', 'user', 'field_name', 'old_value', 'new_value', 'created_at']
 
 
+class AttachmentSerializer(serializers.ModelSerializer):
+    """Serializer para archivos adjuntos"""
+    uploaded_by = UserSerializer(read_only=True)
+    file_url = serializers.SerializerMethodField()
+    file_size_display = serializers.CharField(source='get_file_size_display', read_only=True)
+    file_extension = serializers.CharField(source='get_file_extension', read_only=True)
+    is_image = serializers.BooleanField(read_only=True)
+    
+    class Meta:
+        model = Attachment
+        fields = [
+            'id', 'ticket', 'uploaded_by', 'file', 'file_url', 
+            'filename', 'file_size', 'file_size_display', 'file_type', 
+            'file_extension', 'is_image', 'uploaded_at', 'description'
+        ]
+        read_only_fields = ['uploaded_by', 'filename', 'file_size', 'file_type', 'uploaded_at']
+    
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.file and request:
+            return request.build_absolute_uri(obj.file.url)
+        return None
+
+
 class TicketListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listas"""
     category = CategorySerializer(read_only=True)
@@ -75,6 +99,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     assigned_to = UserSerializer(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     history = TicketHistorySerializer(many=True, read_only=True)
+    attachments_files = AttachmentSerializer(many=True, read_only=True)
     
     # IDs para escritura
     category_id = serializers.PrimaryKeyRelatedField(
@@ -108,7 +133,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
             'status', 'status_id', 'created_by', 'assigned_to', 
             'assigned_to_id', 'created_at', 'updated_at', 
             'resolved_at', 'closed_at', 'attachments', 'tags',
-            'comments', 'history'
+            'comments', 'history', 'attachments_files'
         ]
         read_only_fields = [
             'ticket_number', 'created_by', 'created_at', 

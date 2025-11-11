@@ -1,6 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+import os
+
+
+def ticket_attachment_path(instance, filename):
+    """Ruta personalizada para archivos adjuntos"""
+    # Guardar en: media/tickets/ticket_123/nombre_archivo.ext
+    return f'tickets/ticket_{instance.ticket.id}/{filename}'
+
 
 class Category(models.Model):
     """Categorías de tickets"""
@@ -137,3 +145,44 @@ class TicketHistory(models.Model):
     
     def __str__(self):
         return f"{self.ticket.ticket_number} - {self.field_name} changed"
+
+
+class Attachment(models.Model):
+    """Archivos adjuntos a tickets"""
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='attachments_files')
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    file = models.FileField(upload_to=ticket_attachment_path)
+    filename = models.CharField(max_length=255)
+    file_size = models.IntegerField(help_text="Tamaño en bytes")
+    file_type = models.CharField(max_length=100)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        return f"{self.filename} - {self.ticket.ticket_number}"
+    
+    def save(self, *args, **kwargs):
+        if self.file:
+            self.filename = self.file.name
+            self.file_size = self.file.size
+            self.file_type = os.path.splitext(self.file.name)[1].lower()
+        super().save(*args, **kwargs)
+    
+    def get_file_extension(self):
+        return os.path.splitext(self.filename)[1].lower().replace('.', '')
+    
+    def is_image(self):
+        image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        return self.get_file_extension() in image_extensions
+    
+    def get_file_size_display(self):
+        """Retorna el tamaño en formato legible"""
+        size = self.file_size
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024.0:
+                return f"{size:.1f} {unit}"
+            size /= 1024.0
+        return f"{size:.1f} TB"
