@@ -1,0 +1,58 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Nuevo Ticket Creado - {{ ticket.ticket_number }}{% endblock %}
+
+{% block content %}
+<h2 style="color: #333; margin-top: 0;">✨ Nuevo Ticket Creado</h2>
+
+<p>Hola <strong>{{ ticket.created_by.first_name }}</strong>,</p>
+
+<p>Tu ticket ha sido creado exitosamente y ha sido asignado el número:</p>
+
+<div class="ticket-info">
+    <div class="ticket-number">{{ ticket.ticket_number }}</div>
+    <div class="ticket-title">{{ ticket.title }}</div>
+    <div style="margin-top: 10px;">
+        <span class="badge badge-priority-{{ ticket.priority.name|lower }}">
+            {{ ticket.priority.get_name_display }}
+        </span>
+        <span class="badge badge-status-{{ ticket.status.name|lower }}">
+            {{ ticket.status.get_name_display }}
+        </span>
+    </div>
+</div>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Categoría:</span>
+        <span class="details-value">{{ ticket.category.name }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Prioridad:</span>
+        <span class="details-value">{{ ticket.priority.get_name_display }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Estado:</span>
+        <span class="details-value">{{ ticket.status.get_name_display }}</span>
+    </div>
+    {% if ticket.assigned_to %}
+    <div class="details-row">
+        <span class="details-label">Asignado a:</span>
+        <span class="details-value">{{ ticket.assigned_to.get_full_name }}</span>
+    </div>
+    {% endif %}
+</div>
+
+<p><strong>Descripción:</strong></p>
+<p style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; white-space: pre-wrap;">{{ ticket.description }}</p>
+
+<center>
+    <a href="{{ site_url }}/tickets/{{ ticket.id }}" class="button">
+        Ver Ticket Completo
+    </a>
+</center>
+
+<p style="color: #666; font-size: 14px; margin-top: 30px;">
+    Recibirás actualizaciones cuando haya cambios en este ticket.
+</p>
+{% endblock %}

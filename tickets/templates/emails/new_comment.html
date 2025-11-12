@@ -1,0 +1,50 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Nuevo Comentario - {{ ticket.ticket_number }}{% endblock %}
+
+{% block content %}
+<h2 style="color: #333; margin-top: 0;">💬 Nuevo Comentario en tu Ticket</h2>
+
+<p>Hola <strong>{{ recipient.first_name }}</strong>,</p>
+
+<p><strong>{{ comment.user.get_full_name }}</strong> ha agregado un comentario en el ticket:</p>
+
+<div class="ticket-info">
+    <div class="ticket-number">{{ ticket.ticket_number }}</div>
+    <div class="ticket-title">{{ ticket.title }}</div>
+</div>
+
+<div style="background-color: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 4px;">
+    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; margin-right: 10px;">
+            {{ comment.user.first_name.0 }}{{ comment.user.last_name.0 }}
+        </div>
+        <div>
+            <div style="font-weight: 600; color: #333;">{{ comment.user.get_full_name }}</div>
+            <div style="font-size: 12px; color: #666;">{{ comment.created_at|date:"d/m/Y H:i" }}</div>
+        </div>
+    </div>
+    <p style="margin: 10px 0 0 0; white-space: pre-wrap;">{{ comment.content }}</p>
+</div>
+
+<center>
+    <a href="{{ site_url }}/tickets/{{ ticket.id }}" class="button">
+        Ver Ticket y Responder
+    </a>
+</center>
+
+<div class="details" style="margin-top: 30px;">
+    <div class="details-row">
+        <span class="details-label">Estado actual:</span>
+        <span class="details-value">{{ ticket.status.get_name_display }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Prioridad:</span>
+        <span class="details-value">{{ ticket.priority.get_name_display }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Total de comentarios:</span>
+        <span class="details-value">{{ ticket.comments.count }}</span>
+    </div>
+</div>
+{% endblock %}

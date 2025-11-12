@@ -1,0 +1,77 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Cambio de Estado - {{ ticket.ticket_number }}{% endblock %}
+
+{% block content %}
+<h2 style="color: #333; margin-top: 0;">🔄 Estado del Ticket Actualizado</h2>
+
+<p>Hola <strong>{{ recipient.first_name }}</strong>,</p>
+
+<p>El estado del ticket ha cambiado:</p>
+
+<div class="ticket-info">
+    <div class="ticket-number">{{ ticket.ticket_number }}</div>
+    <div class="ticket-title">{{ ticket.title }}</div>
+</div>
+
+<div style="background-color: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 4px; text-align: center;">
+    <div style="margin-bottom: 15px;">
+        <span class="badge badge-status-{{ old_status|lower }}" style="font-size: 14px;">
+            {{ old_status_display }}
+        </span>
+        <span style="font-size: 24px; margin: 0 15px; color: #667eea;">→</span>
+        <span class="badge badge-status-{{ ticket.status.name|lower }}" style="font-size: 14px;">
+            {{ ticket.status.get_name_display }}
+        </span>
+    </div>
+    <p style="margin: 0; color: #666; font-size: 14px;">
+        Cambiado por <strong>{{ changed_by.get_full_name }}</strong>
+    </p>
+</div>
+
+{% if ticket.status.name == 'RESOLVED' %}
+<div style="background-color: #d1e7dd; border-left: 4px solid #198754; padding: 15px; margin: 20px 0; border-radius: 4px;">
+    <p style="margin: 0; color: #0f5132;">
+        <strong>✅ ¡Ticket Resuelto!</strong><br>
+        El ticket ha sido marcado como resuelto. Si el problema persiste, puedes reabrir el ticket.
+    </p>
+</div>
+{% elif ticket.status.name == 'CLOSED' %}
+<div style="background-color: #e2e3e5; border-left: 4px solid #6c757d; padding: 15px; margin: 20px 0; border-radius: 4px;">
+    <p style="margin: 0; color: #41464b;">
+        <strong>🔒 Ticket Cerrado</strong><br>
+        Este ticket ha sido cerrado. Gracias por usar nuestro sistema de soporte.
+    </p>
+</div>
+{% elif ticket.status.name == 'IN_PROGRESS' %}
+<div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+    <p style="margin: 0; color: #997404;">
+        <strong>⚡ En Progreso</strong><br>
+        Tu ticket está siendo atendido. Te mantendremos informado.
+    </p>
+</div>
+{% endif %}
+
+<center>
+    <a href="{{ site_url }}/tickets/{{ ticket.id }}" class="button">
+        Ver Detalles del Ticket
+    </a>
+</center>
+
+<div class="details" style="margin-top: 30px;">
+    <div class="details-row">
+        <span class="details-label">Prioridad:</span>
+        <span class="details-value">{{ ticket.priority.get_name_display }}</span>
+    </div>
+    {% if ticket.assigned_to %}
+    <div class="details-row">
+        <span class="details-label">Asignado a:</span>
+        <span class="details-value">{{ ticket.assigned_to.get_full_name }}</span>
+    </div>
+    {% endif %}
+    <div class="details-row">
+        <span class="details-label">Última actualización:</span>
+        <span class="details-value">{{ ticket.updated_at|date:"d/m/Y H:i" }}</span>
+    </div>
+</div>
+{% endblock %}

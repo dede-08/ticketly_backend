@@ -13,6 +13,13 @@ from .serializers import (
     CategorySerializer, PrioritySerializer, StatusSerializer,
     CommentSerializer, TicketHistorySerializer, AttachmentSerializer
 )
+from .notifications import (
+    notify_ticket_created, 
+    notify_ticket_assigned, 
+    notify_new_comment, 
+    notify_status_changed,
+    notify_priority_changed
+)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -56,23 +63,63 @@ class TicketViewSet(viewsets.ModelViewSet):
         return TicketDetailSerializer
     
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        ticket = serializer.save(created_by=self.request.user)
+        
+        # Enviar notificación de ticket creado
+        try:
+            notify_ticket_created(ticket)
+            
+            # Si el ticket ya tiene asignado, notificarle también
+            if ticket.assigned_to:
+                notify_ticket_assigned(ticket, self.request.user)
+        except Exception as e:
+            print(f"Error enviando notificación: {e}")
     
     def perform_update(self, serializer):
         old_instance = self.get_object()
+        
+        # Guardar valores antiguos antes de actualizar
+        old_status = old_instance.status
+        old_status_name = old_instance.status.name
+        old_status_display = old_instance.status.get_name_display()
+        old_priority = old_instance.priority
+        old_assigned = old_instance.assigned_to
+        
+        # Actualizar el ticket
         new_instance = serializer.save()
         
         # Registrar cambios en el historial
         self._track_changes(old_instance, new_instance)
         
-        # Actualizar timestamps si el estado cambió
-        if old_instance.status != new_instance.status:
-            if new_instance.status.name == 'RESOLVED' and not new_instance.resolved_at:
-                new_instance.resolved_at = timezone.now()
-                new_instance.save()
-            elif new_instance.status.name == 'CLOSED' and not new_instance.closed_at:
-                new_instance.closed_at = timezone.now()
-                new_instance.save()
+        # === NOTIFICACIONES ===
+        try:
+            # Notificar cambio de estado
+            if old_status != new_instance.status:
+                notify_status_changed(
+                    new_instance, 
+                    old_status_name, 
+                    old_status_display,
+                    self.request.user
+                )
+                
+                # Actualizar timestamps
+                if new_instance.status.name == 'RESOLVED' and not new_instance.resolved_at:
+                    new_instance.resolved_at = timezone.now()
+                    new_instance.save()
+                elif new_instance.status.name == 'CLOSED' and not new_instance.closed_at:
+                    new_instance.closed_at = timezone.now()
+                    new_instance.save()
+            
+            # Notificar cambio de prioridad (si aumentó)
+            if old_priority != new_instance.priority:
+                notify_priority_changed(new_instance, old_priority, self.request.user)
+            
+            # Notificar nueva asignación
+            if old_assigned != new_instance.assigned_to and new_instance.assigned_to:
+                notify_ticket_assigned(new_instance, self.request.user)
+                
+        except Exception as e:
+            print(f"Error enviando notificación: {e}")
     
     def _track_changes(self, old_instance, new_instance):
         """Registrar cambios importantes en el historial"""
@@ -98,7 +145,14 @@ class TicketViewSet(viewsets.ModelViewSet):
         serializer = CommentSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
-            serializer.save(ticket=ticket, user=request.user)
+            comment = serializer.save(ticket=ticket, user=request.user)
+            
+            # Enviar notificación de nuevo comentario
+            try:
+                notify_new_comment(ticket, comment)
+            except Exception as e:
+                print(f"Error enviando notificación de comentario: {e}")
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -124,6 +178,13 @@ class TicketViewSet(viewsets.ModelViewSet):
                 old_value=str(old_assigned) if old_assigned else '',
                 new_value=str(user) if user else ''
             )
+            
+            # Enviar notificación si se asignó a alguien nuevo
+            try:
+                if user and user != old_assigned:
+                    notify_ticket_assigned(ticket, request.user)
+            except Exception as e:
+                print(f"Error enviando notificación de asignación: {e}")
             
             serializer = self.get_serializer(ticket)
             return Response(serializer.data)
@@ -171,6 +232,72 @@ class TicketViewSet(viewsets.ModelViewSet):
         }
         
         return Response(stats)
+    
+    @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def upload_attachment(self, request, pk=None):
+        """Subir archivo adjunto a un ticket"""
+        ticket = self.get_object()
+        file = request.FILES.get('file')
+        description = request.data.get('description', '')
+        
+        if not file:
+            return Response(
+                {'error': 'No se proporcionó ningún archivo'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validar tamaño del archivo (10MB)
+        if file.size > settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
+            return Response(
+                {'error': f'El archivo es demasiado grande. Máximo {settings.FILE_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024}MB'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validar extensión
+        file_extension = os.path.splitext(file.name)[1].lower().replace('.', '')
+        if file_extension not in settings.ALLOWED_FILE_EXTENSIONS:
+            return Response(
+                {'error': f'Tipo de archivo no permitido. Extensiones permitidas: {", ".join(settings.ALLOWED_FILE_EXTENSIONS)}'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Crear el attachment
+        attachment = Attachment.objects.create(
+            ticket=ticket,
+            uploaded_by=request.user,
+            file=file,
+            description=description
+        )
+        
+        serializer = AttachmentSerializer(attachment, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['delete'])
+    def delete_attachment(self, request, pk=None):
+        """Eliminar un archivo adjunto"""
+        try:
+            attachment_id = request.data.get('attachment_id')
+            attachment = Attachment.objects.get(id=attachment_id, ticket_id=pk)
+            
+            # Solo el que subió el archivo o el creador del ticket pueden eliminarlo
+            if attachment.uploaded_by != request.user and self.get_object().created_by != request.user:
+                return Response(
+                    {'error': 'No tienes permiso para eliminar este archivo'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Eliminar el archivo físico
+            if attachment.file:
+                if os.path.isfile(attachment.file.path):
+                    os.remove(attachment.file.path)
+            
+            attachment.delete()
+            return Response({'message': 'Archivo eliminado correctamente'}, status=status.HTTP_200_OK)
+        except Attachment.DoesNotExist:
+            return Response(
+                {'error': 'Archivo no encontrado'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class CommentViewSet(viewsets.ModelViewSet):

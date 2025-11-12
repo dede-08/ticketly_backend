@@ -140,6 +140,20 @@ ALLOWED_FILE_EXTENSIONS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Para desarrollo local (usando Gmail)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ticketly@gmail.com'  # Cambia esto
+EMAIL_HOST_PASSWORD = 'tu_app_password'  # Cambia esto (ver instrucciones abajo)
+DEFAULT_FROM_EMAIL = 'Ticketly <ticketly@gmail.com>'
+
+# Para testing (imprime emails en consola en lugar de enviarlos)
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# URL base para links en emails
+SITE_URL = 'http://localhost:4200'
 
 #CORS settings
 CORS_ALLOWED_ORIGINS = [
