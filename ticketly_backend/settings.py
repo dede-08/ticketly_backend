@@ -57,6 +57,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -74,8 +75,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'ticketly_db',
-        'USER': 'postgres',  # Usuario por defecto en Windows
-        'PASSWORD': '123456',  # Cambia esto
+        'USER': 'postgres',
+        'PASSWORD': '123456',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -143,13 +144,36 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
+    "http://127.0.0.1:4200",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+]
+
+CSRF_COOKIE_SECURE = False  # True en producción con HTTPS
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 # REST Framework Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
