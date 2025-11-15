@@ -6,7 +6,7 @@ from django.utils.html import strip_tags
 
 def send_ticket_notification(template_name, subject, recipient_email, context):
     """
-    Función helper para enviar notificaciones por email
+    funcion helper para enviar notificaciones por email
     """
     try:
         # Renderizar el template HTML
@@ -30,7 +30,7 @@ def send_ticket_notification(template_name, subject, recipient_email, context):
 
 def notify_ticket_created(ticket):
     """
-    Notifica al creador que su ticket fue creado
+    notifica al creador que su ticket fue creado
     """
     context = {
         'ticket': ticket,
@@ -47,7 +47,7 @@ def notify_ticket_created(ticket):
 
 def notify_ticket_assigned(ticket, assigned_by):
     """
-    Notifica al usuario asignado sobre el nuevo ticket
+    notifica al usuario asignado sobre el nuevo ticket
     """
     if not ticket.assigned_to or not ticket.assigned_to.email:
         return
@@ -68,7 +68,7 @@ def notify_ticket_assigned(ticket, assigned_by):
 
 def notify_new_comment(ticket, comment):
     """
-    Notifica al creador y al asignado sobre un nuevo comentario
+    notifica al creador y al asignado sobre un nuevo comentario
     """
     recipients = set()
     
@@ -103,7 +103,7 @@ def notify_new_comment(ticket, comment):
 
 def notify_status_changed(ticket, old_status, old_status_display, changed_by):
     """
-    Notifica sobre el cambio de estado del ticket
+    notifica sobre el cambio de estado del ticket
     """
     recipients = set()
     
@@ -140,7 +140,7 @@ def notify_status_changed(ticket, old_status, old_status_display, changed_by):
 
 def notify_priority_changed(ticket, old_priority, changed_by):
     """
-    Notifica sobre el cambio de prioridad del ticket
+    notifica sobre el cambio de prioridad del ticket
     """
     recipients = set()
     
@@ -163,7 +163,7 @@ def notify_priority_changed(ticket, old_priority, changed_by):
             
             send_ticket_notification(
                 template_name='status_changed.html',  # Reutilizamos este template
-                subject=f'⚠️ Prioridad Aumentada - {ticket.ticket_number}',
+                subject=f'Prioridad Aumentada - {ticket.ticket_number}',
                 recipient_email=email,
                 context=context
             )

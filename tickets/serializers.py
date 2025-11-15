@@ -49,7 +49,7 @@ class TicketHistorySerializer(serializers.ModelSerializer):
 
 
 class AttachmentSerializer(serializers.ModelSerializer):
-    """Serializer para archivos adjuntos"""
+    """serializer para archivos adjuntos"""
     uploaded_by = UserSerializer(read_only=True)
     file_url = serializers.SerializerMethodField()
     file_size_display = serializers.CharField(source='get_file_size_display', read_only=True)
@@ -73,7 +73,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
 
 class TicketListSerializer(serializers.ModelSerializer):
-    """Serializer simplificado para listas"""
+    """serializer simplificado para listas"""
     category = CategorySerializer(read_only=True)
     priority = PrioritySerializer(read_only=True)
     status = StatusSerializer(read_only=True)
@@ -91,7 +91,7 @@ class TicketListSerializer(serializers.ModelSerializer):
 
 
 class TicketDetailSerializer(serializers.ModelSerializer):
-    """Serializer completo para detalles"""
+    """serializer completo para detalles"""
     category = CategorySerializer(read_only=True)
     priority = PrioritySerializer(read_only=True)
     status = StatusSerializer(read_only=True)
@@ -101,7 +101,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     history = TicketHistorySerializer(many=True, read_only=True)
     attachments_files = AttachmentSerializer(many=True, read_only=True)
     
-    # IDs para escritura
+    #IDs para escritura
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), 
         source='category', 
@@ -146,7 +146,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
 
 
 class TicketCreateSerializer(serializers.ModelSerializer):
-    """Serializer simplificado para creación"""
+    """serializer simplificado para creacion"""
     
     class Meta:
         model = Ticket

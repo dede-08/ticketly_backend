@@ -23,28 +23,28 @@ from .notifications import (
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    """ViewSet para categorías"""
+    """viewset para categorías"""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
 
 
 class PriorityViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet para prioridades (solo lectura)"""
+    """viewset para prioridades (solo lectura)"""
     queryset = Priority.objects.all()
     serializer_class = PrioritySerializer
     permission_classes = [IsAuthenticated]
 
 
 class StatusViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet para estados (solo lectura)"""
+    """viewset para estados (solo lectura)"""
     queryset = Status.objects.all()
     serializer_class = StatusSerializer
     permission_classes = [IsAuthenticated]
 
 
 class TicketViewSet(viewsets.ModelViewSet):
-    """ViewSet principal para tickets"""
+    """viewset principal para tickets"""
     queryset = Ticket.objects.select_related(
         'category', 'priority', 'status', 'created_by', 'assigned_to'
     ).prefetch_related('comments', 'history')
@@ -65,35 +65,35 @@ class TicketViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         ticket = serializer.save(created_by=self.request.user)
         
-        # Enviar notificación de ticket creado
+        #enviar notificacion de ticket creado
         try:
             notify_ticket_created(ticket)
             
-            # Si el ticket ya tiene asignado, notificarle también
+            #si el ticket ya tiene asignado, notificarle tambien
             if ticket.assigned_to:
                 notify_ticket_assigned(ticket, self.request.user)
         except Exception as e:
-            print(f"Error enviando notificación: {e}")
+            print(f"error enviando notificacion: {e}")
     
     def perform_update(self, serializer):
         old_instance = self.get_object()
         
-        # Guardar valores antiguos antes de actualizar
+        #guardar valores antiguos antes de actualizar
         old_status = old_instance.status
         old_status_name = old_instance.status.name
         old_status_display = old_instance.status.get_name_display()
         old_priority = old_instance.priority
         old_assigned = old_instance.assigned_to
         
-        # Actualizar el ticket
+        #actualizar el ticket
         new_instance = serializer.save()
         
-        # Registrar cambios en el historial
+        #registrar cambios en el historial
         self._track_changes(old_instance, new_instance)
         
         # === NOTIFICACIONES ===
         try:
-            # Notificar cambio de estado
+            #notificar cambio de estado
             if old_status != new_instance.status:
                 notify_status_changed(
                     new_instance, 
@@ -102,7 +102,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                     self.request.user
                 )
                 
-                # Actualizar timestamps
+                #actualizar timestamps
                 if new_instance.status.name == 'RESOLVED' and not new_instance.resolved_at:
                     new_instance.resolved_at = timezone.now()
                     new_instance.save()
@@ -110,19 +110,19 @@ class TicketViewSet(viewsets.ModelViewSet):
                     new_instance.closed_at = timezone.now()
                     new_instance.save()
             
-            # Notificar cambio de prioridad (si aumentó)
+            #notificar cambio de prioridad (si aumentó)
             if old_priority != new_instance.priority:
                 notify_priority_changed(new_instance, old_priority, self.request.user)
             
-            # Notificar nueva asignación
+            #notificar nueva asignacion
             if old_assigned != new_instance.assigned_to and new_instance.assigned_to:
                 notify_ticket_assigned(new_instance, self.request.user)
                 
         except Exception as e:
-            print(f"Error enviando notificación: {e}")
+            print(f"error enviando notificacion: {e}")
     
     def _track_changes(self, old_instance, new_instance):
-        """Registrar cambios importantes en el historial"""
+        """registrar cambios importantes en el historial"""
         fields_to_track = ['status', 'priority', 'assigned_to', 'category']
         
         for field in fields_to_track:
@@ -140,25 +140,25 @@ class TicketViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def add_comment(self, request, pk=None):
-        """Agregar comentario a un ticket"""
+        """agregar comentario a un ticket"""
         ticket = self.get_object()
         serializer = CommentSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             comment = serializer.save(ticket=ticket, user=request.user)
             
-            # Enviar notificación de nuevo comentario
+            #enviar notificacion de nuevo comentario
             try:
                 notify_new_comment(ticket, comment)
             except Exception as e:
-                print(f"Error enviando notificación de comentario: {e}")
+                print(f"error enviando notificacion de comentario: {e}")
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])
     def assign(self, request, pk=None):
-        """Asignar ticket a un usuario"""
+        """asignar ticket a un usuario"""
         ticket = self.get_object()
         user_id = request.data.get('user_id')
         
@@ -170,7 +170,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             ticket.assigned_to = user
             ticket.save()
             
-            # Registrar cambio
+            #registrar cambio
             TicketHistory.objects.create(
                 ticket=ticket,
                 user=request.user,
@@ -179,38 +179,38 @@ class TicketViewSet(viewsets.ModelViewSet):
                 new_value=str(user) if user else ''
             )
             
-            # Enviar notificación si se asignó a alguien nuevo
+            #enviar notificacion si se asigno a alguien nuevo
             try:
                 if user and user != old_assigned:
                     notify_ticket_assigned(ticket, request.user)
             except Exception as e:
-                print(f"Error enviando notificación de asignación: {e}")
+                print(f"error enviando notificacion de asignacion: {e}")
             
             serializer = self.get_serializer(ticket)
             return Response(serializer.data)
         except User.DoesNotExist:
             return Response(
-                {'error': 'Usuario no encontrado'}, 
+                {'error': 'usuario no encontrado'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
     
     @action(detail=False, methods=['get'])
     def my_tickets(self, request):
-        """Obtener tickets del usuario actual"""
+        """obtener tickets del usuario actual"""
         tickets = self.queryset.filter(created_by=request.user)
         serializer = self.get_serializer(tickets, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def assigned_to_me(self, request):
-        """Obtener tickets asignados al usuario actual"""
+        """obtener tickets asignados al usuario actual"""
         tickets = self.queryset.filter(assigned_to=request.user)
         serializer = self.get_serializer(tickets, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def statistics(self, request):
-        """Obtener estadísticas de tickets"""
+        """obtener estadisticas de tickets"""
         from django.db.models import Count, Q
         
         stats = {
@@ -235,33 +235,33 @@ class TicketViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def upload_attachment(self, request, pk=None):
-        """Subir archivo adjunto a un ticket"""
+        """subir archivo adjunto a un ticket"""
         ticket = self.get_object()
         file = request.FILES.get('file')
         description = request.data.get('description', '')
         
         if not file:
             return Response(
-                {'error': 'No se proporcionó ningún archivo'}, 
+                {'error': 'no se proporciono ningun archivo'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Validar tamaño del archivo (10MB)
+        #validar tamaño del archivo (10MB)
         if file.size > settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
             return Response(
-                {'error': f'El archivo es demasiado grande. Máximo {settings.FILE_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024}MB'}, 
+                {'error': f'el archivo es demasiado grande. maximo {settings.FILE_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024}MB'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Validar extensión
+        #validar extension
         file_extension = os.path.splitext(file.name)[1].lower().replace('.', '')
         if file_extension not in settings.ALLOWED_FILE_EXTENSIONS:
             return Response(
-                {'error': f'Tipo de archivo no permitido. Extensiones permitidas: {", ".join(settings.ALLOWED_FILE_EXTENSIONS)}'}, 
+                {'error': f'tipo de archivo no permitido. extensiones permitidas: {", ".join(settings.ALLOWED_FILE_EXTENSIONS)}'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Crear el attachment
+        #crear el attachment
         attachment = Attachment.objects.create(
             ticket=ticket,
             uploaded_by=request.user,
@@ -274,15 +274,15 @@ class TicketViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['delete'])
     def delete_attachment(self, request, pk=None):
-        """Eliminar un archivo adjunto"""
+        """eliminar un archivo adjunto"""
         try:
             attachment_id = request.data.get('attachment_id')
             attachment = Attachment.objects.get(id=attachment_id, ticket_id=pk)
             
-            # Solo el que subió el archivo o el creador del ticket pueden eliminarlo
+            #solo el que subió el archivo o el creador del ticket pueden eliminarlo
             if attachment.uploaded_by != request.user and self.get_object().created_by != request.user:
                 return Response(
-                    {'error': 'No tienes permiso para eliminar este archivo'}, 
+                    {'error': 'no tienes permiso para eliminar este archivo'}, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -292,16 +292,16 @@ class TicketViewSet(viewsets.ModelViewSet):
                     os.remove(attachment.file.path)
             
             attachment.delete()
-            return Response({'message': 'Archivo eliminado correctamente'}, status=status.HTTP_200_OK)
+            return Response({'message': 'archivo eliminado correctamente'}, status=status.HTTP_200_OK)
         except Attachment.DoesNotExist:
             return Response(
-                {'error': 'Archivo no encontrado'}, 
+                {'error': 'archivo no encontrado'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """ViewSet para comentarios"""
+    """viewset para comentarios"""
     queryset = Comment.objects.select_related('ticket', 'user')
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]

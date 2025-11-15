@@ -5,13 +5,13 @@ import os
 
 
 def ticket_attachment_path(instance, filename):
-    """Ruta personalizada para archivos adjuntos"""
-    # Guardar en: media/tickets/ticket_123/nombre_archivo.ext
+    """ruta personalizada para archivos adjuntos"""
+    #guardar en: media/tickets/ticket_123/nombre_archivo.ext
     return f'tickets/ticket_{instance.ticket.id}/{filename}'
 
 
 class Category(models.Model):
-    """Categorías de tickets"""
+    """categorías de tickets"""
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -25,7 +25,7 @@ class Category(models.Model):
 
 
 class Priority(models.Model):
-    """Prioridades de tickets"""
+    """prioridades de tickets"""
     PRIORITY_CHOICES = [
         ('LOW', 'Baja'),
         ('MEDIUM', 'Media'),
@@ -46,7 +46,7 @@ class Priority(models.Model):
 
 
 class Status(models.Model):
-    """Estados de tickets"""
+    """estados de tickets"""
     STATUS_CHOICES = [
         ('OPEN', 'Abierto'),
         ('IN_PROGRESS', 'En Progreso'),
@@ -66,27 +66,27 @@ class Status(models.Model):
 
 
 class Ticket(models.Model):
-    """Modelo principal de tickets"""
+    """modelo principal de tickets"""
     title = models.CharField(max_length=200)
     description = models.TextField()
     ticket_number = models.CharField(max_length=20, unique=True, editable=False)
     
-    # Relaciones
+    #relaciones
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='tickets')
     priority = models.ForeignKey(Priority, on_delete=models.PROTECT, related_name='tickets')
     status = models.ForeignKey(Status, on_delete=models.PROTECT, related_name='tickets')
     
-    # Usuarios
+    #usuarios
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tickets')
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
     
-    # Timestamps
+    #timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
     closed_at = models.DateTimeField(null=True, blank=True)
     
-    # Metadata
+    #metadata
     attachments = models.JSONField(default=list, blank=True)
     tags = models.JSONField(default=list, blank=True)
     
@@ -103,7 +103,7 @@ class Ticket(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.ticket_number:
-            # Generar número de ticket único
+            #generar numero de ticket unico
             last_ticket = Ticket.objects.order_by('-id').first()
             if last_ticket:
                 last_num = int(last_ticket.ticket_number.split('-')[1])
@@ -115,7 +115,7 @@ class Ticket(models.Model):
 
 
 class Comment(models.Model):
-    """Comentarios en tickets"""
+    """comentarios en tickets"""
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
@@ -131,7 +131,7 @@ class Comment(models.Model):
 
 
 class TicketHistory(models.Model):
-    """Historial de cambios en tickets"""
+    """historial de cambios en tickets"""
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='history')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     field_name = models.CharField(max_length=50)
@@ -148,7 +148,7 @@ class TicketHistory(models.Model):
 
 
 class Attachment(models.Model):
-    """Archivos adjuntos a tickets"""
+    """archivos adjuntos a tickets"""
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='attachments_files')
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
     file = models.FileField(upload_to=ticket_attachment_path)
@@ -179,7 +179,7 @@ class Attachment(models.Model):
         return self.get_file_extension() in image_extensions
     
     def get_file_size_display(self):
-        """Retorna el tamaño en formato legible"""
+        """retorna el tamaño en formato legible"""
         size = self.file_size
         for unit in ['B', 'KB', 'MB', 'GB']:
             if size < 1024.0:

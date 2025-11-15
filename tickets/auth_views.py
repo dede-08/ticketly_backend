@@ -8,7 +8,7 @@ from .auth_serializers import RegisterSerializer, UserDetailSerializer, ChangePa
 
 
 class RegisterView(generics.CreateAPIView):
-    """Vista para registro de usuarios"""
+    """vista para registro de usuarios"""
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
@@ -38,7 +38,7 @@ class RegisterView(generics.CreateAPIView):
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
-    """Vista para ver y actualizar perfil del usuario"""
+    """sista para ver y actualizar perfil del usuario"""
     serializer_class = UserDetailSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -47,7 +47,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
 
 class ChangePasswordView(generics.UpdateAPIView):
-    """Vista para cambiar contraseña"""
+    """vista para cambiar contraseña"""
     serializer_class = ChangePasswordSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -60,41 +60,41 @@ class ChangePasswordView(generics.UpdateAPIView):
         #verificar contraseña actual
         if not user.check_password(serializer.validated_data['old_password']):
             return Response(
-                {'old_password': 'Contraseña incorrecta'}, 
+                {'old_password': 'contraseña incorrecta'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Establecer nueva contraseña
+        #establecer nueva contraseña
         user.set_password(serializer.validated_data['new_password'])
         user.save()
         
         return Response({
-            'message': 'Contraseña actualizada exitosamente'
+            'message': 'contraseña actualizada exitosamente'
         }, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
-    """Vista para cerrar sesión"""
+    """vista para cerrar sesión"""
     try:
         refresh_token = request.data.get("refresh")
         if refresh_token:
             token = RefreshToken(refresh_token)
             token.blacklist()
         return Response({
-            'message': 'Sesión cerrada exitosamente'
+            'message': 'sesion cerrada exitosamente'
         }, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({
-            'error': 'Token inválido'
+            'error': 'token invalido'
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_info_view(request):
-    """Vista para obtener información del usuario actual"""
+    """vista para obtener informacion del usuario actual"""
     user = request.user
     return Response({
         'id': user.id,

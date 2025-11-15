@@ -5,7 +5,7 @@ from rest_framework.validators import UniqueValidator
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """Serializer para registro de usuarios"""
+    """serializer para registro de usuarios"""
     email = serializers.EmailField(
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())]
@@ -37,7 +37,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-    """Serializer para detalles del usuario"""
+    """serializer para detalles del usuario"""
     
     class Meta:
         model = User
@@ -46,7 +46,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    """Serializer para cambiar contraseña"""
+    """serializer para cambiar contraseña"""
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True, validators=[validate_password])
     new_password2 = serializers.CharField(required=True)
