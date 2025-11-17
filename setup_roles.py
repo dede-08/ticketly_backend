@@ -1,20 +1,18 @@
 
 """
 Script para crear roles y permisos en el sistema
-Ejecutar: python setup_roles.py
 """
 
 import os
 import sys
 import django
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
+from tickets.models import Ticket, Comment, Category
 
 # Configurar Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ticketly_backend.settings')
 django.setup()
-
-from django.contrib.auth.models import Group, Permission
-from django.contrib.contenttypes.models import ContentType
-from tickets.models import Ticket, Comment, Category
 
 def create_roles():
     """Crear los 4 roles principales del sistema"""
