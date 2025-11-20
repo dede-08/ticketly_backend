@@ -9,11 +9,11 @@ def send_ticket_notification(template_name, subject, recipient_email, context):
     funcion helper para enviar notificaciones por email
     """
     try:
-        # Renderizar el template HTML
+         #renderizar el template HTML
         html_message = render_to_string(f'emails/{template_name}', context)
         plain_message = strip_tags(html_message)
         
-        # Enviar el email
+        #enviar el email
         send_mail(
             subject=subject,
             message=plain_message,
@@ -107,19 +107,19 @@ def notify_status_changed(ticket, old_status, old_status_display, changed_by):
     """
     recipients = set()
     
-    # Agregar al creador del ticket
+    #agregar al creador del ticket
     if ticket.created_by.email:
         recipients.add((ticket.created_by.email, ticket.created_by))
     
-    # Agregar al asignado (si existe)
+    #agregar al asignado (si existe)
     if ticket.assigned_to and ticket.assigned_to.email:
         recipients.add((ticket.assigned_to.email, ticket.assigned_to))
     
-    # No notificar a quien hizo el cambio
+    #no notificar a quien hizo el cambio
     if changed_by.email in [r[0] for r in recipients]:
         recipients = {r for r in recipients if r[0] != changed_by.email}
     
-    # Enviar notificación a cada destinatario
+    #enviar notificación a cada destinatario
     for email, user in recipients:
         context = {
             'ticket': ticket,
@@ -150,7 +150,7 @@ def notify_priority_changed(ticket, old_priority, changed_by):
     if ticket.assigned_to and ticket.assigned_to.email:
         recipients.add((ticket.assigned_to.email, ticket.assigned_to))
     
-    # Solo notificar si la prioridad aumentó
+    #solo notificar si la prioridad aumentó
     if ticket.priority.level > old_priority.level:
         for email, user in recipients:
             context = {
@@ -162,7 +162,7 @@ def notify_priority_changed(ticket, old_priority, changed_by):
             }
             
             send_ticket_notification(
-                template_name='status_changed.html',  # Reutilizamos este template
+                template_name='status_changed.html',  #se reutiliza este template
                 subject=f'Prioridad Aumentada - {ticket.ticket_number}',
                 recipient_email=email,
                 context=context

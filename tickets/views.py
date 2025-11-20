@@ -286,7 +286,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            # Eliminar el archivo físico
+            #eliminar el archivo fisico
             if attachment.file:
                 if os.path.isfile(attachment.file.path):
                     os.remove(attachment.file.path)
