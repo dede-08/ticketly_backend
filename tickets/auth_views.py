@@ -94,14 +94,31 @@ def logout_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_info_view(request):
-    """vista para obtener informacion del usuario actual"""
+    """Vista para obtener información del usuario actual - CORREGIDA"""
     user = request.user
-    return Response({
+    
+    # Determinar el rol del usuario
+    role = 'Usuario'
+    if user.is_superuser:
+        role = 'Administrador'
+    elif user.is_staff:
+        role = 'Staff'
+    elif user.groups.exists():
+        role = user.groups.first().name
+    
+    # IMPORTANTE: Devolver un objeto, NO un array
+    data = {
         'id': user.id,
         'username': user.username,
         'email': user.email,
         'first_name': user.first_name,
         'last_name': user.last_name,
         'is_staff': user.is_staff,
-        'date_joined': user.date_joined
-    })
+        'is_superuser': user.is_superuser,
+        'date_joined': user.date_joined,
+        'role': role,
+        'groups': [{'id': g.id, 'name': g.name} for g in user.groups.all()],
+    }
+
+    print(f"Enviando datos de usuario: {user.first_name} {user.last_name}")
+    return Response(data, status=status.HTTP_200_OK)

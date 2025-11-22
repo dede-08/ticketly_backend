@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
 from django.conf import settings
 import os
@@ -28,6 +29,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
 
+class StandardPagination(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class PriorityViewSet(viewsets.ReadOnlyModelViewSet):
     """viewset para prioridades (solo lectura)"""
@@ -45,6 +50,7 @@ class StatusViewSet(viewsets.ReadOnlyModelViewSet):
 
 class TicketViewSet(viewsets.ModelViewSet):
     """viewset principal para tickets"""
+    pagination_class = StandardPagination
     queryset = Ticket.objects.select_related(
         'category', 'priority', 'status', 'created_by', 'assigned_to'
     ).prefetch_related('comments', 'history')
