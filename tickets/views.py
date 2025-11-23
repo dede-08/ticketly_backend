@@ -1,3 +1,4 @@
+from logging import exception
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -78,7 +79,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             #si el ticket ya tiene asignado, notificarle tambien
             if ticket.assigned_to:
                 notify_ticket_assigned(ticket, self.request.user)
-        except Exception as e:
+        except exception as e:
             print(f"error enviando notificacion: {e}")
     
     def perform_update(self, serializer):
