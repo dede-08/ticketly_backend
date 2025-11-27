@@ -97,7 +97,7 @@ def user_info_view(request):
     """Vista para obtener información del usuario actual - CORREGIDA"""
     user = request.user
     
-    # Determinar el rol del usuario
+    #determinar el rol del usuario
     role = 'Usuario'
     if user.is_superuser:
         role = 'Administrador'
@@ -106,7 +106,7 @@ def user_info_view(request):
     elif user.groups.exists():
         role = user.groups.first().name
     
-    # IMPORTANTE: Devolver un objeto, NO un array
+    
     data = {
         'id': user.id,
         'username': user.username,
