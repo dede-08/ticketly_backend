@@ -26,7 +26,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError(
-                {"password": "Las contraseñas no coinciden."}
+                {"password": "las contraseñas no coinciden."}
             )
         return attrs
 
@@ -54,6 +54,6 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate(self, attrs):
         if attrs['new_password'] != attrs['new_password2']:
             raise serializers.ValidationError(
-                {"new_password": "Las contraseñas nuevas no coinciden."}
+                {"new_password": "las contraseñas nuevas no coinciden."}
             )
         return attrs

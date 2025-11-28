@@ -1,6 +1,6 @@
 
 """
-Script para crear roles y permisos en el sistema
+script para crear los roles en el sistema
 """
 
 import os
@@ -15,7 +15,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ticketly_backend.settings')
 django.setup()
 
 def create_roles():
-    """Crear los 4 roles principales del sistema"""
+    """crear los 4 roles principales del sistema"""
     
     print("\n" + "="*60)
     print("CONFIGURANDO ROLES Y PERMISOS")
@@ -39,13 +39,13 @@ def create_roles():
             try:
                 permission = Permission.objects.get(codename=perm)
                 usuario_normal.permissions.add(permission)
-                print(f"   Permiso agregado: {perm}")
+                print(f"Permiso agregado: {perm}")
             except Permission.DoesNotExist:
-                print(f"   Permiso no encontrado: {perm}")
+                print(f"Permiso no encontrado: {perm}")
         
-        print("   Rol 'Usuario Normal' creado\n")
+        print("Rol 'Usuario Normal' creado\n")
     else:
-        print("   Rol 'Usuario Normal' ya existe\n")
+        print("Rol 'Usuario Normal' ya existe\n")
     
     
     # ==================== 2. AGENTE DE SOPORTE ====================
@@ -54,11 +54,11 @@ def create_roles():
     agente, created = Group.objects.get_or_create(name='Agente de Soporte')
     
     if created:
-        # Permisos: Gestionar tickets asignados
+        #permisos: gestionar tickets asignados
         permisos_agente = [
             'add_ticket',
             'view_ticket',
-            'change_ticket',   # Modificar tickets
+            'change_ticket',   #modificar tickets
             'add_comment',
             'view_comment',
             'change_comment',
@@ -69,13 +69,13 @@ def create_roles():
             try:
                 permission = Permission.objects.get(codename=perm)
                 agente.permissions.add(permission)
-                print(f"   Permiso agregado: {perm}")
+                print(f"Permiso agregado: {perm}")
             except Permission.DoesNotExist:
-                print(f"   Permiso no encontrado: {perm}")
+                print(f"Permiso no encontrado: {perm}")
         
-        print("   Rol 'Agente de Soporte' creado\n")
+        print("Rol 'Agente de Soporte' creado\n")
     else:
-        print("   Rol 'Agente de Soporte' ya existe\n")
+        print("Rol 'Agente de Soporte' ya existe\n")
     
     
     # ==================== 3. SUPERVISOR ====================
@@ -89,7 +89,7 @@ def create_roles():
             'add_ticket',
             'view_ticket',
             'change_ticket',
-            'delete_ticket',   # Eliminar tickets
+            'delete_ticket',   #eliminar tickets
             'add_comment',
             'view_comment',
             'change_comment',
@@ -103,13 +103,13 @@ def create_roles():
             try:
                 permission = Permission.objects.get(codename=perm)
                 supervisor.permissions.add(permission)
-                print(f"   Permiso agregado: {perm}")
+                print(f"Permiso agregado: {perm}")
             except Permission.DoesNotExist:
-                print(f"   Permiso no encontrado: {perm}")
+                print(f"Permiso no encontrado: {perm}")
         
-        print("  Rol 'Supervisor' creado\n")
+        print("Rol 'Supervisor' creado\n")
     else:
-        print("  Rol 'Supervisor' ya existe\n")
+        print("Rol 'Supervisor' ya existe\n")
     
     
     # ==================== 4. ADMINISTRADOR ====================
@@ -121,10 +121,10 @@ def create_roles():
         # Permisos: Control total
         permisos_admin = Permission.objects.all()
         administrador.permissions.set(permisos_admin)
-        print(f"  Todos los permisos agregados ({permisos_admin.count()} permisos)")
-        print("   Rol 'Administrador' creado\n")
+        print(f"Todos los permisos agregados ({permisos_admin.count()} permisos)")
+        print("Rol 'Administrador' creado\n")
     else:
-        print("   Rol 'Administrador' ya existe\n")
+        print("Rol 'Administrador' ya existe\n")
     
     
     # ==================== RESUMEN ====================
@@ -132,17 +132,17 @@ def create_roles():
     print("CONFIGURACIÓN COMPLETADA")
     print("="*60)
     print("\nRoles creados:")
-    print("  Usuario Normal     - Solo ve y crea sus tickets")
-    print("  Agente de Soporte  - Gestiona tickets asignados")
-    print("  Supervisor         - Ve todo, asigna tickets")
-    print("  Administrador      - Control total")
+    print("Usuario Normal     - Solo ve y crea sus tickets")
+    print("Agente de Soporte  - Gestiona tickets asignados")
+    print("Supervisor         - Ve todo, asigna tickets")
+    print("Administrador      - Control total")
     print("\nAhora puedes asignar roles a los usuarios desde:")
-    print("   http://localhost:8000/admin/auth/user/")
+    print("http://localhost:8000/admin/auth/user/")
     print("")
 
 
 def assign_default_role_to_users():
-    """Asignar rol por defecto a usuarios sin rol"""
+    """asignar rol por defecto a usuarios sin rol"""
     from django.contrib.auth.models import User
     
     print("\n" + "="*60)
@@ -154,7 +154,7 @@ def assign_default_role_to_users():
     
     count = 0
     for user in users_without_group:
-        if not user.is_superuser:  # No asignar rol a superusuarios
+        if not user.is_superuser:  #no asignar rol a superusuarios
             user.groups.add(usuario_normal_group)
             print(f"Usuario '{user.username}' ahora es 'Usuario Normal'")
             count += 1
@@ -166,11 +166,11 @@ def assign_default_role_to_users():
 
 
 def show_user_roles():
-    """Mostrar usuarios y sus roles"""
+    """mostrar usuarios y sus roles"""
     from django.contrib.auth.models import User
     
     print("\n" + "="*60)
-    print(" USUARIOS Y SUS ROLES")
+    print("USUARIOS Y SUS ROLES")
     print("="*60 + "\n")
     
     users = User.objects.all().prefetch_related('groups')

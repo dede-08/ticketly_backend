@@ -33,7 +33,7 @@ class RegisterView(generics.CreateAPIView):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             },
-            'message': 'Usuario registrado exitosamente'
+            'message': 'usuario registrado exitosamente'
         }, status=status.HTTP_201_CREATED)
 
 
@@ -120,5 +120,5 @@ def user_info_view(request):
         'groups': [{'id': g.id, 'name': g.name} for g in user.groups.all()],
     }
 
-    print(f"Enviando datos de usuario: {user.first_name} {user.last_name}")
+    print(f"enviando datos de usuario: {user.first_name} {user.last_name}")
     return Response(data, status=status.HTTP_200_OK)

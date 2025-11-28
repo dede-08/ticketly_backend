@@ -286,7 +286,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             attachment_id = request.data.get('attachment_id')
             attachment = Attachment.objects.get(id=attachment_id, ticket_id=pk)
             
-            #solo el que subió el archivo o el creador del ticket pueden eliminarlo
+            #solo el que subio el archivo o el creador del ticket pueden eliminarlo
             if attachment.uploaded_by != request.user and self.get_object().created_by != request.user:
                 return Response(
                     {'error': 'no tienes permiso para eliminar este archivo'}, 
