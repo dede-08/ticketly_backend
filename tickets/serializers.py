@@ -44,7 +44,7 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'ticket', 'user', 'content', 'is_internal', 'created_at', 'updated_at']
-        read_only_fields = ['user', 'created_at', 'updated_at']
+        read_only_fields = ['user', 'created_at', 'updated_at', 'ticket']
 
 
 class TicketHistorySerializer(serializers.ModelSerializer):
