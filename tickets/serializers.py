@@ -10,25 +10,32 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
+
     class Meta:
         model = Category
         fields = ['id', 'name', 'description', 'created_at']
+        read_only_fields = ['name', 'description', 'created_at']
 
 
 class PrioritySerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
     display_name = serializers.CharField(source='get_name_display', read_only=True)
     
     class Meta:
         model = Priority
         fields = ['id', 'name', 'display_name', 'level', 'color']
+        read_only_fields = ['name', 'display_name', 'level', 'color']
 
 
 class StatusSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
     display_name = serializers.CharField(source='get_name_display', read_only=True)
     
     class Meta:
         model = Status
         fields = ['id', 'name', 'display_name', 'is_closed']
+        read_only_fields = ['name', 'display_name', 'is_closed']
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -92,46 +99,22 @@ class TicketListSerializer(serializers.ModelSerializer):
 
 class TicketDetailSerializer(serializers.ModelSerializer):
     """serializer completo para detalles"""
-    category = CategorySerializer(read_only=True)
-    priority = PrioritySerializer(read_only=True)
-    status = StatusSerializer(read_only=True)
+    category = CategorySerializer()
+    priority = PrioritySerializer()
+    status = StatusSerializer()
     created_by = UserSerializer(read_only=True)
     assigned_to = UserSerializer(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     history = TicketHistorySerializer(many=True, read_only=True)
     attachments_files = AttachmentSerializer(many=True, read_only=True)
     
-    #IDs para escritura
-    category_id = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), 
-        source='category', 
-        write_only=True
-    )
-    priority_id = serializers.PrimaryKeyRelatedField(
-        queryset=Priority.objects.all(), 
-        source='priority', 
-        write_only=True
-    )
-    status_id = serializers.PrimaryKeyRelatedField(
-        queryset=Status.objects.all(), 
-        source='status', 
-        write_only=True
-    )
-    assigned_to_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), 
-        source='assigned_to', 
-        write_only=True,
-        required=False,
-        allow_null=True
-    )
-    
     class Meta:
         model = Ticket
         fields = [
             'id', 'ticket_number', 'title', 'description', 
-            'category', 'category_id', 'priority', 'priority_id', 
-            'status', 'status_id', 'created_by', 'assigned_to', 
-            'assigned_to_id', 'created_at', 'updated_at', 
+            'category', 'priority', 
+            'status', 'created_by', 'assigned_to', 
+            'created_at', 'updated_at', 
             'resolved_at', 'closed_at', 'attachments', 'tags',
             'comments', 'history', 'attachments_files'
         ]
@@ -139,14 +122,27 @@ class TicketDetailSerializer(serializers.ModelSerializer):
             'ticket_number', 'created_by', 'created_at', 
             'updated_at', 'resolved_at', 'closed_at'
         ]
-    
-    def create(self, validated_data):
-        validated_data['created_by'] = self.context['request'].user
-        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        category_data = validated_data.pop('category', None)
+        priority_data = validated_data.pop('priority', None)
+        status_data = validated_data.pop('status', None)
+
+        if category_data:
+            instance.category = Category.objects.get(id=category_data.get('id'))
+        if priority_data:
+            instance.priority = Priority.objects.get(id=priority_data.get('id'))
+        if status_data:
+            instance.status = Status.objects.get(id=status_data.get('id'))
+
+        return super().update(instance, validated_data)
 
 
 class TicketCreateSerializer(serializers.ModelSerializer):
     """serializer simplificado para creacion"""
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+    priority = serializers.PrimaryKeyRelatedField(queryset=Priority.objects.all())
+    status = serializers.PrimaryKeyRelatedField(queryset=Status.objects.all())
     
     class Meta:
         model = Ticket
@@ -154,7 +150,3 @@ class TicketCreateSerializer(serializers.ModelSerializer):
             'title', 'description', 'category', 'priority', 
             'status', 'assigned_to', 'tags'
         ]
-    
-    def create(self, validated_data):
-        validated_data['created_by'] = self.context['request'].user
-        return super().create(validated_data)

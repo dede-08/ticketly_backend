@@ -83,57 +83,60 @@ class TicketViewSet(viewsets.ModelViewSet):
             print(f"error enviando notificacion: {e}")
     
     def perform_update(self, serializer):
+        print("Validated data:", serializer.validated_data)
+        
         old_instance = self.get_object()
         
-        #guardar valores antiguos antes de actualizar
-        old_status = old_instance.status
-        old_status_name = old_instance.status.name
-        old_status_display = old_instance.status.get_name_display()
-        old_priority = old_instance.priority
-        old_assigned = old_instance.assigned_to
+        #capturar valores antiguos antes de que se guarden
+        old_values = {
+            'status': old_instance.status,
+            'priority': old_instance.priority,
+            'assigned_to': old_instance.assigned_to,
+            'category': old_instance.category,
+            'title': old_instance.title,
+            'description': old_instance.description
+        }
         
-        #actualizar el ticket
         new_instance = serializer.save()
-        
+
         #registrar cambios en el historial
-        self._track_changes(old_instance, new_instance)
+        self._track_changes(old_values, new_instance)
         
         # === NOTIFICACIONES ===
         try:
             #notificar cambio de estado
-            if old_status != new_instance.status:
+            if old_values['status'] != new_instance.status:
                 notify_status_changed(
                     new_instance, 
-                    old_status_name, 
-                    old_status_display,
+                    old_values['status'].name, 
+                    old_values['status'].get_name_display(),
                     self.request.user
                 )
                 
                 #actualizar timestamps
                 if new_instance.status.name == 'RESOLVED' and not new_instance.resolved_at:
                     new_instance.resolved_at = timezone.now()
-                    new_instance.save()
                 elif new_instance.status.name == 'CLOSED' and not new_instance.closed_at:
                     new_instance.closed_at = timezone.now()
-                    new_instance.save()
+                new_instance.save()
             
             #notificar cambio de prioridad (si aumentó)
-            if old_priority != new_instance.priority:
-                notify_priority_changed(new_instance, old_priority, self.request.user)
+            if old_values['priority'] != new_instance.priority:
+                notify_priority_changed(new_instance, old_values['priority'], self.request.user)
             
             #notificar nueva asignacion
-            if old_assigned != new_instance.assigned_to and new_instance.assigned_to:
+            if old_values['assigned_to'] != new_instance.assigned_to and new_instance.assigned_to:
                 notify_ticket_assigned(new_instance, self.request.user)
                 
         except Exception as e:
             print(f"error enviando notificacion: {e}")
     
-    def _track_changes(self, old_instance, new_instance):
+    def _track_changes(self, old_values, new_instance):
         """registrar cambios importantes en el historial"""
-        fields_to_track = ['status', 'priority', 'assigned_to', 'category']
+        fields_to_track = ['status', 'priority', 'assigned_to', 'category', 'title', 'description']
         
         for field in fields_to_track:
-            old_value = getattr(old_instance, field)
+            old_value = old_values.get(field)
             new_value = getattr(new_instance, field)
             
             if old_value != new_value:

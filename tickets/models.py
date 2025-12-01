@@ -35,7 +35,7 @@ class Priority(models.Model):
     
     name = models.CharField(max_length=20, choices=PRIORITY_CHOICES, unique=True)
     level = models.IntegerField(default=1)
-    color = models.CharField(max_length=7, default='#6c757d')
+    color = models.CharField(max_length=7, default="#6c757d")
     
     class Meta:
         verbose_name_plural = "Priorities"
