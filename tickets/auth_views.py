@@ -94,7 +94,7 @@ def logout_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_info_view(request):
-    """Vista para obtener información del usuario actual - CORREGIDA"""
+    """vista para obtener información del usuario actual - CORREGIDA"""
     user = request.user
     
     #determinar el rol del usuario

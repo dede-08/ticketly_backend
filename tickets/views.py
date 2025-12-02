@@ -120,7 +120,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                     new_instance.closed_at = timezone.now()
                 new_instance.save()
             
-            #notificar cambio de prioridad (si aumentó)
+            #notificar cambio de prioridad (si aumento)
             if old_values['priority'] != new_instance.priority:
                 notify_priority_changed(new_instance, old_values['priority'], self.request.user)
             
