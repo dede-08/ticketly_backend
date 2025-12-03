@@ -1,4 +1,4 @@
-from logging import exception
+import logging
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -75,12 +75,11 @@ class TicketViewSet(viewsets.ModelViewSet):
         #enviar notificacion de ticket creado
         try:
             notify_ticket_created(ticket)
-            
             #si el ticket ya tiene asignado, notificarle tambien
             if ticket.assigned_to:
                 notify_ticket_assigned(ticket, self.request.user)
-        except exception as e:
-            print(f"error enviando notificacion: {e}")
+        except Exception as e:
+            logging.exception(f"error enviando notificacion: {e}")
     
     def perform_update(self, serializer):
         print("Validated data:", serializer.validated_data)
@@ -129,7 +128,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 notify_ticket_assigned(new_instance, self.request.user)
                 
         except Exception as e:
-            print(f"error enviando notificacion: {e}")
+            logging.exception(f"error enviando notificacion: {e}")
     
     def _track_changes(self, old_values, new_instance):
         """registrar cambios importantes en el historial"""
@@ -161,7 +160,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             try:
                 notify_new_comment(ticket, comment)
             except Exception as e:
-                print(f"error enviando notificacion de comentario: {e}")
+                logging.exception(f"error enviando notificacion de comentario: {e}")
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -194,7 +193,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 if user and user != old_assigned:
                     notify_ticket_assigned(ticket, request.user)
             except Exception as e:
-                print(f"error enviando notificacion de asignacion: {e}")
+                logging.exception(f"error enviando notificacion de asignacion: {e}")
             
             serializer = self.get_serializer(ticket)
             return Response(serializer.data)
@@ -296,10 +295,14 @@ class TicketViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            #eliminar el archivo fisico
+            #eliminar el archivo fisico usando Storage API
             if attachment.file:
-                if os.path.isfile(attachment.file.path):
-                    os.remove(attachment.file.path)
+                try:
+                    from django.core.files.storage import default_storage
+                    if default_storage.exists(attachment.file.name):
+                        default_storage.delete(attachment.file.name)
+                except Exception as e:
+                    logging.exception(f"Error eliminando archivo fisico: {e}")
             
             attachment.delete()
             return Response({'message': 'archivo eliminado correctamente'}, status=status.HTTP_200_OK)

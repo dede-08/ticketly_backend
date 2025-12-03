@@ -1,6 +1,11 @@
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde .env
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,13 +14,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^a(rc)7j+4bm@l0-9@9w03(m&y%6apx+0p#^um6xxyebc2y6nb'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# Seguridad: cargar desde entorno
+SECRET_KEY = os.getenv('SECRET_KEY', 'set-a-strong-secret-key')
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -74,11 +77,11 @@ WSGI_APPLICATION = 'ticketly_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ticketly_db',
-        'USER': 'postgres',
-        'PASSWORD': '123456',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME', 'ticketly_db'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -141,19 +144,21 @@ ALLOWED_FILE_EXTENSIONS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Para desarrollo local (usando Gmail)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'ticketly@gmail.com'  # Cambia esto
-EMAIL_HOST_PASSWORD = 'tu_app_password'  # Cambia esto (ver instrucciones abajo)
-DEFAULT_FROM_EMAIL = 'Ticketly <ticketly@gmail.com>'
+
+# Email config desde entorno
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Ticketly <ticketly@gmail.com>')
 
 # Para testing (imprime emails en consola en lugar de enviarlos)
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # URL base para links en emails
-SITE_URL = 'http://localhost:4200'
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:4200')
 
 #CORS settings
 CORS_ALLOWED_ORIGINS = [
