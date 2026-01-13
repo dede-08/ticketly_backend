@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 from django.core.exceptions import ImproperlyConfigured
 
-# Cargar variables de entorno desde .env
+#cargar variables de entorno desde el .env
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -17,18 +17,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Seguridad: cargar desde entorno
-# Preferir variable específica `DJANGO_SECRET_KEY`; fallback a `SECRET_KEY` por compatibilidad
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = [h for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h]
 
-# En entorno de producción exigimos que `DJANGO_SECRET_KEY` esté presente
+# SECRET_KEY: requerido en producción, flexible en desarrollo
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     if DEBUG:
-        # Valor inseguro solo para desarrollo local; cambiarlo cuando no se use DEBUG
-        SECRET_KEY = 'set-a-strong-secret-key'
+        # Valor inseguro solo para desarrollo - CAMBIAR EN PRODUCCIÓN
+        SECRET_KEY = 'django-insecure-dev-key-12345678901234567890abcdefghijklmnopqrst'
+        import warnings
+        warnings.warn('Using insecure SECRET_KEY in development. Set DJANGO_SECRET_KEY in production!')
     else:
-        raise ImproperlyConfigured('DJANGO_SECRET_KEY environment variable is required in production')
+        raise ImproperlyConfigured(
+            'DJANGO_SECRET_KEY environment variable is required in production. '
+            'Generar con: from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+        )
 
 
 # Application definition
@@ -153,9 +157,9 @@ ALLOWED_FILE_EXTENSIONS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Para desarrollo local (usando Gmail)
+#para desarrollo local (usando Gmail)
 
-# Email config desde entorno
+#email config desde entorno
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
@@ -202,6 +206,40 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'Fa
 SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False').lower() == 'true'
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = os.getenv('X_FRAME_OPTIONS', 'DENY')
+
+# Validación de email en producción
+if not DEBUG:
+    if not os.getenv('EMAIL_HOST_USER') or not os.getenv('EMAIL_HOST_PASSWORD'):
+        raise ImproperlyConfigured('EMAIL_HOST_USER y EMAIL_HOST_PASSWORD son requeridos en producción')
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': os.getenv('LOG_LEVEL', 'INFO'),
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}
 
 # REST Framework Settings
 REST_FRAMEWORK = {

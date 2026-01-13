@@ -15,6 +15,7 @@ from .serializers import (
     CategorySerializer, PrioritySerializer, StatusSerializer,
     CommentSerializer, TicketHistorySerializer, AttachmentSerializer
 )
+from .permissions import IsTicketCreatorOrAssigned, IsCommentCreator, IsAttachmentCreatorOrTicketCreator
 from .notifications import (
     notify_ticket_created, 
     notify_ticket_assigned, 
@@ -22,6 +23,9 @@ from .notifications import (
     notify_status_changed,
     notify_priority_changed
 )
+
+#configurar logger
+logger = logging.getLogger(__name__)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -55,7 +59,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.select_related(
         'category', 'priority', 'status', 'created_by', 'assigned_to'
     ).prefetch_related('comments', 'history')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTicketCreatorOrAssigned]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'priority', 'category', 'assigned_to', 'created_by']
     search_fields = ['title', 'description', 'ticket_number']
@@ -72,18 +76,16 @@ class TicketViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         ticket = serializer.save(created_by=self.request.user)
         
-        #enviar notificacion de ticket creado
+        #enviar notificación de ticket creado
         try:
             notify_ticket_created(ticket)
-            #si el ticket ya tiene asignado, notificarle tambien
+            #si el ticket ya tiene asignado, notificarle también
             if ticket.assigned_to:
                 notify_ticket_assigned(ticket, self.request.user)
         except Exception as e:
-            logging.exception(f"error enviando notificacion: {e}")
+            logger.error(f"Error enviando notificación de ticket creado: {e}", exc_info=True)
     
     def perform_update(self, serializer):
-        print("Validated data:", serializer.validated_data)
-        
         old_instance = self.get_object()
         
         #capturar valores antiguos antes de que se guarden
@@ -119,16 +121,16 @@ class TicketViewSet(viewsets.ModelViewSet):
                     new_instance.closed_at = timezone.now()
                 new_instance.save()
             
-            #notificar cambio de prioridad (si aumento)
+            #notificar cambio de prioridad
             if old_values['priority'] != new_instance.priority:
                 notify_priority_changed(new_instance, old_values['priority'], self.request.user)
             
-            #notificar nueva asignacion
+            #notificar nueva asignación
             if old_values['assigned_to'] != new_instance.assigned_to and new_instance.assigned_to:
                 notify_ticket_assigned(new_instance, self.request.user)
                 
         except Exception as e:
-            logging.exception(f"error enviando notificacion: {e}")
+            logger.error(f"Error enviando notificación de actualización: {e}", exc_info=True)
     
     def _track_changes(self, old_values, new_instance):
         """registrar cambios importantes en el historial"""
@@ -156,11 +158,11 @@ class TicketViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             comment = serializer.save(ticket=ticket, user=request.user)
             
-            #enviar notificacion de nuevo comentario
+            #enviar notificación de nuevo comentario
             try:
                 notify_new_comment(ticket, comment)
             except Exception as e:
-                logging.exception(f"error enviando notificacion de comentario: {e}")
+                logger.error(f"Error enviando notificación de comentario: {e}", exc_info=True)
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -188,16 +190,20 @@ class TicketViewSet(viewsets.ModelViewSet):
                 new_value=str(user) if user else ''
             )
             
-            #enviar notificacion si se asigno a alguien nuevo
+            #enviar notificación si se asignó a alguien nuevo
             try:
                 if user and user != old_assigned:
                     notify_ticket_assigned(ticket, request.user)
             except Exception as e:
-                logging.exception(f"error enviando notificacion de asignacion: {e}")
+                logger.error(f"Error enviando notificación de asignación: {e}", exc_info=True)
             
             serializer = self.get_serializer(ticket)
             return Response(serializer.data)
         except User.DoesNotExist:
+            return Response(
+                {'error': 'usuario no encontrado'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
             return Response(
                 {'error': 'usuario no encontrado'}, 
                 status=status.HTTP_404_NOT_FOUND
@@ -317,7 +323,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """viewset para comentarios"""
     queryset = Comment.objects.select_related('ticket', 'user')
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsCommentCreator]
     
     def get_queryset(self):
         queryset = super().get_queryset()

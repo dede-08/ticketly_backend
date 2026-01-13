@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db import transaction
 import os
+import uuid
 
 
 def ticket_attachment_path(instance, filename):
@@ -103,14 +105,20 @@ class Ticket(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.ticket_number:
-            #generar numero de ticket unico
-            last_ticket = Ticket.objects.order_by('-id').first()
-            if last_ticket:
-                last_num = int(last_ticket.ticket_number.split('-')[1])
-                new_num = last_num + 1
-            else:
-                new_num = 1
-            self.ticket_number = f"TKT-{new_num:06d}"
+            #generar ticket_number único y seguro usando transaccion atomica
+            with transaction.atomic():
+                #usar select_for_update para evitar race conditions
+                last_ticket = Ticket.objects.select_for_update().order_by('-id').first()
+                if last_ticket:
+                    try:
+                        last_num = int(last_ticket.ticket_number.split('-')[1])
+                        new_num = last_num + 1
+                    except (ValueError, IndexError):
+                        #fallback seguro si el formato es inválido
+                        new_num = Ticket.objects.count() + 1
+                else:
+                    new_num = 1
+                self.ticket_number = f"TKT-{new_num:06d}"
         super().save(*args, **kwargs)
 
 
