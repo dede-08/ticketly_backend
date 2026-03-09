@@ -6,11 +6,11 @@ class IsTicketCreatorOrAssigned(permissions.BasePermission):
     Permiso personalizado: solo el creador del ticket o el asignado pueden modificarlo
     """
     def has_object_permission(self, request, view, obj):
-        #lLos metodos seguros (GET, HEAD, OPTIONS) requieren solo autenticación
+        #los metodos seguros (GET, HEAD, OPTIONS) requieren solo autenticación
         if request.method in permissions.SAFE_METHODS:
             return True
         
-        # Para modificaciones: solo el creador o el asignado
+        #para modificaciones: solo el creador o el asignado
         return obj.created_by == request.user or obj.assigned_to == request.user
 
 
@@ -23,7 +23,7 @@ class IsCommentCreator(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         
-        # Para modificaciones: solo el creador del comentario
+        #para modificaciones: solo el creador del comentario
         return obj.user == request.user
 
 
@@ -35,5 +35,5 @@ class IsAttachmentCreatorOrTicketCreator(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         
-        #solo quien subió o creador del ticket
+        #solo quien creó el ticket
         return obj.uploaded_by == request.user or obj.ticket.created_by == request.user

@@ -49,7 +49,7 @@ def check_permissions_implementation():
     
     permissions_file = Path('tickets/permissions.py')
     if not permissions_file.exists():
-        print("  ❌ Archivo permissions.py no encontrado")
+        print("Archivo permissions.py no encontrado")
         return False
     
     content = permissions_file.read_text()
@@ -75,7 +75,7 @@ def check_views_updated():
     
     views_file = Path('tickets/views.py')
     if not views_file.exists():
-        print("  ❌ Archivo views.py no encontrado")
+        print("Archivo views.py no encontrado")
         return False
     
     content = views_file.read_text()
@@ -103,7 +103,7 @@ def check_models_updated():
     
     models_file = Path('tickets/models.py')
     if not models_file.exists():
-        print("  ❌ Archivo models.py no encontrado")
+        print("Archivo models.py no encontrado")
         return False
     
     content = models_file.read_text()
@@ -130,7 +130,7 @@ def check_notifications_updated():
     
     notifications_file = Path('tickets/notifications.py')
     if not notifications_file.exists():
-        print("  ❌ Archivo notifications.py no encontrado")
+        print("Archivo notifications.py no encontrado")
         return False
     
     content = notifications_file.read_text()
@@ -178,18 +178,18 @@ def main():
     print("=" * 60)
     
     for check_name, passed in results.items():
-        status = "✅ PASÓ" if passed else "❌ FALLÓ"
+        status = "PASÓ" if passed else "❌ FALLÓ"
         print(f"  {status}: {check_name}")
     
     all_passed = all(results.values())
     
     print("\n" + "=" * 60)
     if all_passed:
-        print("✅ TODAS LAS VERIFICACIONES PASARON")
+        print("TODAS LAS VERIFICACIONES PASARON")
         print("\nSiguiente paso: python setup_env.py")
         return 0
     else:
-        print("❌ ALGUNAS VERIFICACIONES FALLARON")
+        print("ALGUNAS VERIFICACIONES FALLARON")
         print("\nRevisar los cambios e intentar de nuevo")
         return 1
 

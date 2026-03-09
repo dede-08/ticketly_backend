@@ -29,10 +29,10 @@ def create_roles():
     if created:
         # Permisos: Solo crear tickets y ver los propios
         permisos_usuario = [
-            'add_ticket',      # Crear tickets
-            'view_ticket',     # Ver tickets (filtrado en views)
-            'add_comment',     # Agregar comentarios
-            'view_comment',    # Ver comentarios
+            'add_ticket',  
+            'view_ticket',     
+            'add_comment',     
+            'view_comment',   
         ]
         
         for perm in permisos_usuario:
@@ -58,7 +58,7 @@ def create_roles():
         permisos_agente = [
             'add_ticket',
             'view_ticket',
-            'change_ticket',   #modificar tickets
+            'change_ticket',
             'add_comment',
             'view_comment',
             'change_comment',
@@ -89,7 +89,7 @@ def create_roles():
             'add_ticket',
             'view_ticket',
             'change_ticket',
-            'delete_ticket',   #eliminar tickets
+            'delete_ticket',
             'add_comment',
             'view_comment',
             'change_comment',
