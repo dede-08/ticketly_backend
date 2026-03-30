@@ -7,8 +7,6 @@ import os
 import sys
 import django
 from django.contrib.auth.models import Group, Permission
-from django.contrib.contenttypes.models import ContentType
-from tickets.models import Ticket, Comment, Category
 
 #configurar Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ticketly_backend.settings')

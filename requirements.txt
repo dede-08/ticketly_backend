@@ -26,3 +26,6 @@ coverage==7.4.0
 # Production server (optional)
 gunicorn==21.2.0
 whitenoise==6.6.0
+
+# Authentication
+djangorestframework-simplejwt==2.8.0

@@ -18,7 +18,6 @@ def create_env_file():
     """Crea un archivo .env con configuración inicial"""
     project_root = Path(__file__).resolve().parent
     env_file = project_root / '.env'
-    env_example = project_root / '.env.example'
     
     if env_file.exists():
         print(f"⚠️  El archivo .env ya existe en {env_file}")
@@ -74,11 +73,11 @@ DJANGO_LOG_LEVEL=INFO
         f.write(env_content)
     
     print(f"Archivo .env creado en {env_file}")
-    print(f"\nSECRET_KEY generada (guardada en .env)")
-    print(f"\nIMPORTANTE:")
-    print(f"   1. Configura DB_PASSWORD con tu contraseña de PostgreSQL")
-    print(f"   2. Configura EMAIL_HOST_USER y EMAIL_HOST_PASSWORD para notificaciones")
-    print(f"   3. En producción, establece DEBUG=False")
+    print("\nSECRET_KEY generada (guardada en .env)")
+    print("\nIMPORTANTE:")
+    print("   1. Configura DB_PASSWORD con tu contraseña de PostgreSQL")
+    print("   2. Configura EMAIL_HOST_USER y EMAIL_HOST_PASSWORD para notificaciones")
+    print("   3. En producción, establece DEBUG=False")
     
     return True
 

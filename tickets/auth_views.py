@@ -85,7 +85,7 @@ def logout_view(request):
         return Response({
             'message': 'sesion cerrada exitosamente'
         }, status=status.HTTP_200_OK)
-    except Exception as e:
+    except Exception:
         return Response({
             'error': 'token invalido'
         }, status=status.HTTP_400_BAD_REQUEST)

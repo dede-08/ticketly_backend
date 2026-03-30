@@ -10,7 +10,6 @@ Uso: python verify_security.py
 
 import os
 import sys
-import importlib.util
 from pathlib import Path
 
 def check_secret_key_validation():
@@ -19,7 +18,7 @@ def check_secret_key_validation():
     
     settings_file = Path('ticketly_backend/settings.py')
     if not settings_file.exists():
-        print("  ❌ Archivo settings.py no encontrado")
+        print("Archivo settings.py no encontrado")
         return False
     
     content = settings_file.read_text()

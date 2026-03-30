@@ -1,9 +1,10 @@
 {% extends "emails/base.html" %}
+{% load i18n %}
 
-{% block title %}Ticket Asignado - {{ ticket.ticket_number }}{% endblock %}
+{% block title %}{% trans "Ticket Asignado" %} - {{ ticket.ticket_number }}{% endblock %}
 
 {% block content %}
-<h2 style="color: #333; margin-top: 0;">Te han asignado un ticket</h2>
+<h2 style="color: #333; margin-top: 0;">{% trans "Ticket Asignado" %}</h2>
 
 <p>Hola <strong>{{ ticket.assigned_to.first_name }}</strong>,</p>
 

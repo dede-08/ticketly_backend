@@ -13,9 +13,9 @@ from .models import Ticket, Category, Priority, Status, Comment, TicketHistory, 
 from .serializers import (
     TicketListSerializer, TicketDetailSerializer, TicketCreateSerializer,
     CategorySerializer, PrioritySerializer, StatusSerializer,
-    CommentSerializer, TicketHistorySerializer, AttachmentSerializer
+    CommentSerializer, AttachmentSerializer
 )
-from .permissions import IsTicketCreatorOrAssigned, IsCommentCreator, IsAttachmentCreatorOrTicketCreator
+from .permissions import IsTicketCreatorOrAssigned, IsCommentCreator
 from .notifications import (
     notify_ticket_created, 
     notify_ticket_assigned, 
@@ -226,7 +226,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         """obtener estadisticas de tickets"""
-        from django.db.models import Count, Q
+        from django.db.models import Count
         
         stats = {
             'total': self.queryset.count(),
