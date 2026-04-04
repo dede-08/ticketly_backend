@@ -68,4 +68,3 @@ docker-compose up --build
 - `Ticket.ticket_number` generado con `transaction.atomic` + `select_for_update`.
 - Validación de adjuntos en backend (tamaño y extensiones).
 - Test básico del endpoint de tickets.
-- Linter `ruff`, formatter `black`, `isort` con pre-commit.
