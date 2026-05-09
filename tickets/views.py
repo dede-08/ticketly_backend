@@ -204,10 +204,6 @@ class TicketViewSet(viewsets.ModelViewSet):
                 {'error': 'usuario no encontrado'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
-            return Response(
-                {'error': 'usuario no encontrado'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
     
     @action(detail=False, methods=['get'])
     def my_tickets(self, request):

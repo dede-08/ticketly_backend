@@ -20,7 +20,7 @@ def create_env_file():
     env_file = project_root / '.env'
     
     if env_file.exists():
-        print(f"⚠️  El archivo .env ya existe en {env_file}")
+        print(f"El archivo .env ya existe en {env_file}")
         response = input("¿Deseas sobrescribirlo? (s/n): ").lower().strip()
         if response != 's':
             print("Configuración cancelada.")

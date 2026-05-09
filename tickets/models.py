@@ -102,22 +102,33 @@ class Ticket(models.Model):
         return f"{self.ticket_number} - {self.title}"
     
     def save(self, *args, **kwargs):
+        from django.db import IntegrityError
         if not self.ticket_number:
-            #generar ticket_number unico y seguro usando transaccion atomica
-            with transaction.atomic():
-                #usar select_for_update para evitar race conditions
-                last_ticket = Ticket.objects.select_for_update().order_by('-id').first()
-                if last_ticket:
-                    try:
-                        last_num = int(last_ticket.ticket_number.split('-')[1])
-                        new_num = last_num + 1
-                    except (ValueError, IndexError):
-                        #fallback seguro si el formato es inválido
-                        new_num = Ticket.objects.count() + 1
-                else:
-                    new_num = 1
-                self.ticket_number = f"TKT-{new_num:06d}"
-        super().save(*args, **kwargs)
+            max_retries = 5
+            for i in range(max_retries):
+                try:
+                    # generar ticket_number unico y seguro usando transaccion atomica
+                    with transaction.atomic():
+                        # usar select_for_update para evitar race conditions
+                        last_ticket = Ticket.objects.select_for_update().order_by('-id').first()
+                        if last_ticket:
+                            try:
+                                last_num = int(last_ticket.ticket_number.split('-')[1])
+                                new_num = last_num + 1
+                            except (ValueError, IndexError):
+                                # fallback seguro si el formato es inválido
+                                new_num = Ticket.objects.count() + 1
+                        else:
+                            new_num = Ticket.objects.count() + 1
+                        
+                        self.ticket_number = f"TKT-{new_num:06d}"
+                        super().save(*args, **kwargs)
+                        break  # Éxito si no hay IntegrityError
+                except IntegrityError:
+                    if i == max_retries - 1:
+                        raise  # Si falló muchas veces, relanzar el error
+        else:
+            super().save(*args, **kwargs)
 
 
 class Comment(models.Model):

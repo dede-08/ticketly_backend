@@ -7,3 +7,5 @@ venv/
 
 ticketly_db.sql
 EJEMPLOS_PERMISOS.md
+
+.ruff_cache/

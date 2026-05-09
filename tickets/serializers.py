@@ -128,12 +128,28 @@ class TicketDetailSerializer(serializers.ModelSerializer):
         priority_data = validated_data.pop('priority', None)
         status_data = validated_data.pop('status', None)
 
-        if category_data:
-            instance.category = Category.objects.get(id=category_data.get('id'))
-        if priority_data:
-            instance.priority = Priority.objects.get(id=priority_data.get('id'))
-        if status_data:
-            instance.status = Status.objects.get(id=status_data.get('id'))
+        errors = {}
+
+        if category_data and 'id' in category_data:
+            try:
+                instance.category = Category.objects.get(id=category_data['id'])
+            except Category.DoesNotExist:
+                errors['category'] = ['Categoría no encontrada.']
+                
+        if priority_data and 'id' in priority_data:
+            try:
+                instance.priority = Priority.objects.get(id=priority_data['id'])
+            except Priority.DoesNotExist:
+                errors['priority'] = ['Prioridad no encontrada.']
+                
+        if status_data and 'id' in status_data:
+            try:
+                instance.status = Status.objects.get(id=status_data['id'])
+            except Status.DoesNotExist:
+                errors['status'] = ['Estado no encontrado.']
+
+        if errors:
+            raise serializers.ValidationError(errors)
 
         return super().update(instance, validated_data)
 
