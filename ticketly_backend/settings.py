@@ -36,7 +36,6 @@ if not SECRET_KEY:
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -47,6 +46,7 @@ INSTALLED_APPS = [
 
     # Third party
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
     
@@ -158,7 +158,6 @@ ALLOWED_FILE_EXTENSIONS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #para desarrollo local (usando Gmail)
-
 #email config desde entorno
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')

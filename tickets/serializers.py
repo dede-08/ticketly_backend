@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Ticket, Category, Priority, Status, Comment, TicketHistory, Attachment
+from .permissions import is_staff_or_higher
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -104,7 +105,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     status = StatusSerializer()
     created_by = UserSerializer(read_only=True)
     assigned_to = UserSerializer(read_only=True)
-    comments = CommentSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
     history = TicketHistorySerializer(many=True, read_only=True)
     attachments_files = AttachmentSerializer(many=True, read_only=True)
     
@@ -122,6 +123,14 @@ class TicketDetailSerializer(serializers.ModelSerializer):
             'ticket_number', 'created_by', 'created_at', 
             'updated_at', 'resolved_at', 'closed_at'
         ]
+
+    def get_comments(self, obj):
+        """los comentarios internos solo los ve el personal de soporte"""
+        request = self.context.get('request')
+        comments = obj.comments.all()  #usa la cache de prefetch_related
+        if request and not is_staff_or_higher(request.user):
+            comments = [c for c in comments if not c.is_internal]
+        return CommentSerializer(comments, many=True, read_only=True).data
 
     def update(self, instance, validated_data):
         category_data = validated_data.pop('category', None)

@@ -123,10 +123,10 @@ class Ticket(models.Model):
                         
                         self.ticket_number = f"TKT-{new_num:06d}"
                         super().save(*args, **kwargs)
-                        break  # Éxito si no hay IntegrityError
+                        break  #exito si no hay IntegrityError
                 except IntegrityError:
                     if i == max_retries - 1:
-                        raise  # Si falló muchas veces, relanzar el error
+                        raise  #si fallo muchas veces, relanzar el error
         else:
             super().save(*args, **kwargs)
 

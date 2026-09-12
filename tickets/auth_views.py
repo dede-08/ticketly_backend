@@ -120,5 +120,4 @@ def user_info_view(request):
         'groups': [{'id': g.id, 'name': g.name} for g in user.groups.all()],
     }
 
-    print(f"enviando datos de usuario: {user.first_name} {user.last_name}")
     return Response(data, status=status.HTTP_200_OK)
