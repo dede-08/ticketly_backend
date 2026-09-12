@@ -4,13 +4,18 @@ from .base import os  # noqa: F401
 # Entorno de producción: DEBUG siempre desactivado
 DEBUG = False
 
-# SECRET_KEY obligatorio en producción
-if not os.getenv('DJANGO_SECRET_KEY') and not os.getenv('SECRET_KEY'):
+# SECRET_KEY obligatorio en producción (base.py usa fallback solo para dev/CI)
+if not (os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY')):
     from django.core.exceptions import ImproperlyConfigured
     raise ImproperlyConfigured(
         'DJANGO_SECRET_KEY environment variable is required in production. '
         'Generar con: from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
     )
+
+# Email obligatorio en producción
+if not os.getenv('EMAIL_HOST_USER') or not os.getenv('EMAIL_HOST_PASSWORD'):
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured('EMAIL_HOST_USER y EMAIL_HOST_PASSWORD son requeridos en producción')
 
 # Seguridad endurecida por defecto en producción (sobreescribible vía entorno)
 SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True').lower() == 'true'

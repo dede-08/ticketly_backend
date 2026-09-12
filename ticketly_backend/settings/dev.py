@@ -4,10 +4,7 @@ from .base import INSTALLED_APPS, MIDDLEWARE, os  # noqa: F401
 # Entorno de desarrollo
 DEBUG = True
 
-if not os.getenv('DJANGO_SECRET_KEY') and not os.getenv('SECRET_KEY'):
-    SECRET_KEY = 'django-insecure-dev-key-12345678901234567890abcdefghijklmnopqrst'
-    import warnings
-    warnings.warn('Using insecure SECRET_KEY in development. Set DJANGO_SECRET_KEY in production!')
+# base.py ya aplica la SECRET_KEY de desarrollo con aviso si no hay una real.
 
 # Debug Toolbar: activar solo si está instalado y se solicita explícitamente
 if os.getenv('ENABLE_DEBUG_TOOLBAR', 'false').lower() == 'true':

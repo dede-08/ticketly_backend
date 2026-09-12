@@ -2,7 +2,6 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
-from django.core.exceptions import ImproperlyConfigured
 
 #cargar variables de entorno desde el .env
 load_dotenv()
@@ -15,19 +14,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = [h for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h]
 
-# SECRET_KEY: requerido en producción, flexible en desarrollo
+# SECRET_KEY: si no hay clave configurada se usa una de desarrollo (con aviso).
+# La configuración de producción exige una clave real (ver settings/prod.py).
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY')
 if not SECRET_KEY:
-    if DEBUG:
-        # Valor inseguro solo para desarrollo - CAMBIAR EN PRODUCCIÓN
-        SECRET_KEY = 'django-insecure-dev-key-12345678901234567890abcdefghijklmnopqrst'
-        import warnings
-        warnings.warn('Using insecure SECRET_KEY in development. Set DJANGO_SECRET_KEY in production!')
-    else:
-        raise ImproperlyConfigured(
-            'DJANGO_SECRET_KEY environment variable is required in production. '
-            'Generar con: from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
-        )
+    SECRET_KEY = 'django-insecure-dev-key-12345678901234567890abcdefghijklmnopqrst'
+    import warnings
+    warnings.warn('Using insecure SECRET_KEY in development. Set DJANGO_SECRET_KEY in production!')
 
 
 # Application definition
@@ -202,10 +195,8 @@ X_FRAME_OPTIONS = os.getenv('X_FRAME_OPTIONS', 'DENY')
 # Proxy / HTTPS detrás de balanceador
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Validación de email en producción
-if not DEBUG:
-    if not os.getenv('EMAIL_HOST_USER') or not os.getenv('EMAIL_HOST_PASSWORD'):
-        raise ImproperlyConfigured('EMAIL_HOST_USER y EMAIL_HOST_PASSWORD son requeridos en producción')
+# NOTA: las validaciones obligatorias de producción (SECRET_KEY, email)
+# viven en settings/prod.py para no romper importación en dev/CI.
 
 # Logging
 LOGGING = {
