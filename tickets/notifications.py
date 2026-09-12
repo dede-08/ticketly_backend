@@ -175,7 +175,7 @@ def notify_priority_changed(ticket, old_priority, changed_by):
             }
             
             send_ticket_notification(
-                template_name='status_changed.html',  #se reutiliza este template
+                template_name='priority_changed.html',
                 subject=f'Prioridad Aumentada - {ticket.ticket_number}',
                 recipient_email=email,
                 context=context

@@ -5,7 +5,6 @@ Script de configuración inicial para Ticketly Backend
 Usa este script para generar valores seguros para tu .env
 """
 
-import os
 import sys
 import secrets
 from pathlib import Path

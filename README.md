@@ -44,6 +44,8 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+> Nota: `migrate` aplica también las tablas del blacklist de JWT (logout).
+
 ## Ejecutar tests
 
 ```powershell
@@ -56,9 +58,14 @@ Hay workflow en `.github/workflows/django.yml` que ejecuta tests y `ruff`.
 
 ## Contenerización
 
+Levantar API + PostgreSQL:
+
 ```powershell
 docker-compose up --build
 ```
+
+> Para que la app se conecte a la base de datos del contenedor, ajusta
+> `DB_HOST=db` en el archivo `.env` antes de levantar los servicios.
 
 ## Mejores prácticas aplicadas
 
@@ -67,4 +74,8 @@ docker-compose up --build
 - Logging de errores con `logging.exception`.
 - `Ticket.ticket_number` generado con `transaction.atomic` + `select_for_update`.
 - Validación de adjuntos en backend (tamaño y extensiones).
+- Control de acceso por roles (grupos): los usuarios normales solo ven sus
+  tickets; solo Supervisor/Administrador pueden asignar; los comentarios
+  internos son exclusivos del personal de soporte.
+- Archivos estáticos servidos con whitenoise en producción (`collectstatic`).
 - Test básico del endpoint de tickets.

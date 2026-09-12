@@ -1,7 +1,7 @@
 import logging
 import os
 from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.utils import timezone
 from django.conf import settings
 from rest_framework import viewsets, status, filters
@@ -38,8 +38,8 @@ from .notifications import (
 logger = logging.getLogger(__name__)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    """viewset para categorías"""
+class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    """viewset para categorías (solo lectura; se gestionan por admin)"""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
@@ -78,7 +78,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """los usuarios normales solo ven sus tickets (creados o asignados); el personal ve todos"""
-        queryset = self.queryset
+        queryset = self.queryset.annotate(comments_count=Count('comments', distinct=True))
         if not is_staff_or_higher(self.request.user):
             queryset = queryset.filter(
                 Q(created_by=self.request.user) | Q(assigned_to=self.request.user)

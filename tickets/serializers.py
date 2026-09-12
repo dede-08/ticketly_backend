@@ -11,12 +11,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
-
     class Meta:
         model = Category
         fields = ['id', 'name', 'description', 'created_at']
-        read_only_fields = ['name', 'description', 'created_at']
 
 
 class PrioritySerializer(serializers.ModelSerializer):
@@ -87,7 +84,7 @@ class TicketListSerializer(serializers.ModelSerializer):
     status = StatusSerializer(read_only=True)
     created_by = UserSerializer(read_only=True)
     assigned_to = UserSerializer(read_only=True)
-    comments_count = serializers.IntegerField(source='comments.count', read_only=True)
+    comments_count = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Ticket
