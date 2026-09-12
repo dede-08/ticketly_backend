@@ -1,5 +1,5 @@
+from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import User
 from django.db import transaction
 import os
 
@@ -77,8 +77,8 @@ class Ticket(models.Model):
     status = models.ForeignKey(Status, on_delete=models.PROTECT, related_name='tickets')
     
     #usuarios
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tickets')
-    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_tickets')
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
     
     #timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -133,7 +133,7 @@ class Ticket(models.Model):
 class Comment(models.Model):
     """comentarios en tickets"""
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='comments')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
     is_internal = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -149,7 +149,7 @@ class Comment(models.Model):
 class TicketHistory(models.Model):
     """historial de cambios en tickets"""
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='history')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     field_name = models.CharField(max_length=50)
     old_value = models.TextField(blank=True)
     new_value = models.TextField(blank=True)
@@ -166,7 +166,7 @@ class TicketHistory(models.Model):
 class Attachment(models.Model):
     """archivos adjuntos a tickets"""
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='attachments_files')
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file = models.FileField(upload_to=ticket_attachment_path)
     filename = models.CharField(max_length=255)
     file_size = models.IntegerField(help_text="Tamaño en bytes")

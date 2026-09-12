@@ -23,6 +23,11 @@ if not SECRET_KEY:
     warnings.warn('Using insecure SECRET_KEY in development. Set DJANGO_SECRET_KEY in production!')
 
 
+# Modelo de usuario personalizado (app users). Definirlo desde el inicio
+# evita migraciones destructivas en el futuro.
+AUTH_USER_MODEL = 'users.User'
+
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -40,6 +45,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
 
     # Local apps
+    'users',
     'tickets',
 ]
 

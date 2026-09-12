@@ -1,6 +1,6 @@
 import logging
 import os
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db.models import Q, Count
 from django.utils import timezone
 from django.conf import settings
@@ -33,6 +33,8 @@ from .notifications import (
     notify_status_changed,
     notify_priority_changed
 )
+
+User = get_user_model()
 
 #configurar logger
 logger = logging.getLogger(__name__)

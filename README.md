@@ -97,6 +97,8 @@ Selección con la variable `DJANGO_SETTINGS_MODULE`.
 - Control de acceso por roles (grupos): los usuarios normales solo ven sus
   tickets; solo Supervisor/Administrador pueden asignar; los comentarios
   internos son exclusivos del personal de soporte.
+- Modelo de usuario personalizado (`users.User` con `AUTH_USER_MODEL`):
+  punto de extensión para futuros campos sin migraciones destructivas.
 - Archivos estáticos servidos con whitenoise en producción (`collectstatic`).
 - Cache Redis opcional para throttling global entre workers.
 - Documentación OpenAPI con `drf-spectacular`.

@@ -1,8 +1,10 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema_field
 from .models import Ticket, Category, Priority, Status, Comment, TicketHistory, Attachment
 from .permissions import is_staff_or_higher
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
