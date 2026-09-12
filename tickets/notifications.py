@@ -3,38 +3,48 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.utils.html import strip_tags
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
+
+# Envío de emails en segundo plano para no bloquear la respuesta HTTP.
+# Para alto volumen sustituir por una cola (Celery/RQ) en producción.
+_email_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix='ticketly-email')
 
 
 def send_ticket_notification(template_name, subject, recipient_email, context):
     """
-    Función helper para enviar notificaciones por email
-    Retorna True si la notificación se envió exitosamente, False en caso contrario
+    Función helper para enviar notificaciones por email de forma asíncrona
+    Retorna True si la notificación se encoló exitosamente
     """
     if not recipient_email:
         logger.warning(f"Email vacío para notificación: {subject}")
         return False
-    
+
     try:
         #renderizar el template HTML
         html_message = render_to_string(f'emails/{template_name}', context)
         plain_message = strip_tags(html_message)
-        
-        #enviar el email
-        send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[recipient_email],
-            html_message=html_message,
-            fail_silently=False,
-        )
-        logger.info(f"Notificación enviada a {recipient_email}: {subject}")
-        return True
     except Exception as e:
-        logger.error(f"Error enviando email a {recipient_email}: {str(e)}", exc_info=True)
+        logger.error(f"Error renderizando template {template_name}: {str(e)}", exc_info=True)
         return False
+
+    def _send():
+        try:
+            send_mail(
+                subject=subject,
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[recipient_email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            logger.info(f"Notificación enviada a {recipient_email}: {subject}")
+        except Exception as e:
+            logger.error(f"Error enviando email a {recipient_email}: {str(e)}", exc_info=True)
+
+    _email_executor.submit(_send)
+    return True
 
 
 def notify_ticket_created(ticket):

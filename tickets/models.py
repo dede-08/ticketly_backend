@@ -87,7 +87,6 @@ class Ticket(models.Model):
     closed_at = models.DateTimeField(null=True, blank=True)
     
     #metadata
-    attachments = models.JSONField(default=list, blank=True)
     tags = models.JSONField(default=list, blank=True)
     
     class Meta:

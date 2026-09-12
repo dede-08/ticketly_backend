@@ -251,6 +251,26 @@ LOGGING = {
     },
 }
 
+# Cache
+# Redis si REDIS_URL está definida (producción); en desarrollo se usa memoria local.
+REDIS_URL = os.getenv('REDIS_URL', '')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'KEY_PREFIX': 'ticketly',
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'ticketly',
+            'KEY_PREFIX': 'ticketly',
+        }
+    }
+
 # REST Framework Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

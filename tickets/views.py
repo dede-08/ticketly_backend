@@ -243,38 +243,48 @@ class TicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
     
+    def _paginated_list(self, queryset):
+        """responde una lista paginada y filtrada (reutiliza backend de filtros)"""
+        filtered = self.filter_queryset(queryset)
+        page = self.paginate_queryset(filtered)
+        serializer = self.get_serializer(page if page is not None else filtered, many=True)
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def my_tickets(self, request):
         """obtener tickets del usuario actual"""
-        tickets = self.queryset.filter(created_by=request.user)
-        serializer = self.get_serializer(tickets, many=True)
-        return Response(serializer.data)
-    
+        return self._paginated_list(self.get_queryset().filter(created_by=request.user))
+
     @action(detail=False, methods=['get'])
     def assigned_to_me(self, request):
         """obtener tickets asignados al usuario actual"""
-        tickets = self.queryset.filter(assigned_to=request.user)
-        serializer = self.get_serializer(tickets, many=True)
-        return Response(serializer.data)
-    
+        return self._paginated_list(self.get_queryset().filter(assigned_to=request.user))
+
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, IsAdminOrAgent])
     def statistics(self, request):
         """obtener estadisticas de tickets (solo personal de soporte)"""
-        from django.db.models import Count
+        from django.db.models import Count, Q
+        
+        base = self.get_queryset()
+        counts = base.aggregate(
+            total=Count('id'),
+            open=Count('id', filter=Q(status__name='OPEN')),
+            in_progress=Count('id', filter=Q(status__name='IN_PROGRESS')),
+            resolved=Count('id', filter=Q(status__name='RESOLVED')),
+            closed=Count('id', filter=Q(status__name='CLOSED')),
+        )
         
         stats = {
-            'total': self.queryset.count(),
-            'open': self.queryset.filter(status__name='OPEN').count(),
-            'in_progress': self.queryset.filter(status__name='IN_PROGRESS').count(),
-            'resolved': self.queryset.filter(status__name='RESOLVED').count(),
-            'closed': self.queryset.filter(status__name='CLOSED').count(),
+            **counts,
             'by_priority': list(
-                self.queryset.values('priority__name')
+                base.values('priority__name', 'priority__level')
                 .annotate(count=Count('id'))
                 .order_by('-priority__level')
             ),
             'by_category': list(
-                self.queryset.values('category__name')
+                base.values('category__name')
                 .annotate(count=Count('id'))
                 .order_by('-count')
             ),

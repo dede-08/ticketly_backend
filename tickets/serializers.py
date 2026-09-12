@@ -113,7 +113,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
             'category', 'priority', 
             'status', 'created_by', 'assigned_to', 
             'created_at', 'updated_at', 
-            'resolved_at', 'closed_at', 'attachments', 'tags',
+            'resolved_at', 'closed_at', 'tags',
             'comments', 'history', 'attachments_files'
         ]
         read_only_fields = [

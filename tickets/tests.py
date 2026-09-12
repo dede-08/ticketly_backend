@@ -54,8 +54,8 @@ class TicketlyTestCase(TestCase):
 
         response = self.client.get(reverse('ticket-my-tickets'))
         self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.data, list)
-        self.assertTrue(any(t['id'] == ticket.id for t in response.data))
+        self.assertIsInstance(response.data, dict)
+        self.assertTrue(any(t['id'] == ticket.id for t in response.data['results']))
 
 
 class SecurityPermissionsTestCase(TestCase):
