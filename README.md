@@ -38,13 +38,20 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-6. Correr servidor:
+6. Crear los roles del sistema (Usuario Normal, Agente de Soporte, Supervisor, Administrador):
+
+```powershell
+python manage.py setup_roles
+```
+
+7. Correr servidor:
 
 ```powershell
 python manage.py runserver
 ```
 
-> Nota: `migrate` aplica también las tablas del blacklist de JWT (logout).
+> La API es versionada: todos los endpoints viven bajo `/api/v1/`.
+> `migrate` aplica también las tablas del blacklist de JWT (logout).
 
 ## Ejecutar tests
 
@@ -52,24 +59,37 @@ python manage.py runserver
 python manage.py test
 ```
 
+## Documentación de la API
+
+Con el servidor corriendo, en `http://localhost:8000/api/docs/` (Swagger UI)
+y `http://localhost:8000/api/schema/` (schema OpenAPI).
+
 ## CI/CD (GitHub Actions)
 
 Hay workflow en `.github/workflows/django.yml` que ejecuta tests y `ruff`.
 
 ## Contenerización
 
-Levantar API + PostgreSQL:
+Levantar API + PostgreSQL + Redis:
 
 ```powershell
 docker-compose up --build
 ```
 
-> Para que la app se conecte a la base de datos del contenedor, ajusta
-> `DB_HOST=db` en el archivo `.env` antes de levantar los servicios.
+> El contenedor usa la configuración de producción (`settings.prod`) y
+> `DB_HOST=db`/`REDIS_URL` ya se inyectan. Asegura `DJANGO_SECRET_KEY` en `.env`.
+
+## Entornos de configuración
+
+- `ticketly_backend.settings.dev` — desarrollo (por defecto, `DEBUG=True`).
+- `ticketly_backend.settings.prod` — producción (`DEBUG=False`, HSTS/cookies seguras).
+
+Selección con la variable `DJANGO_SETTINGS_MODULE`.
+`setup_env.py` genera un `.env` inicial con valores seguros.
 
 ## Mejores prácticas aplicadas
 
-- Configuración por entorno (`.env`, `django-dotenv`).
+- Configuración por entorno (`.env`, `django-dotenv`, paquete `settings/` base/dev/prod).
 - Seguridad de cookies/HSTS ajustable.
 - Logging de errores con `logging.exception`.
 - `Ticket.ticket_number` generado con `transaction.atomic` + `select_for_update`.
@@ -78,4 +98,5 @@ docker-compose up --build
   tickets; solo Supervisor/Administrador pueden asignar; los comentarios
   internos son exclusivos del personal de soporte.
 - Archivos estáticos servidos con whitenoise en producción (`collectstatic`).
-- Test básico del endpoint de tickets.
+- Cache Redis opcional para throttling global entre workers.
+- Documentación OpenAPI con `drf-spectacular`.

@@ -3,6 +3,7 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV DJANGO_SETTINGS_MODULE ticketly_backend.settings.prod
 
 WORKDIR /app
 
@@ -17,7 +18,9 @@ RUN pip install -r requirements.txt
 
 COPY . /app/
 
-RUN python manage.py collectstatic --noinput
+# collectstatic no depende del entorno: se ejecuta con settings de desarrollo
+# para no requerir secretos en tiempo de build.
+RUN python manage.py collectstatic --noinput --settings=ticketly_backend.settings.dev
 
 EXPOSE 8000
 

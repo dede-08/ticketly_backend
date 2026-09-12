@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from datetime import timedelta
 import os
@@ -9,11 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Seguridad: cargar desde entorno
@@ -49,7 +44,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
-    
+    'drf_spectacular',
+
     # Local apps
     'tickets',
 ]
@@ -87,8 +83,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ticketly_backend.wsgi.application'
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -102,8 +96,6 @@ DATABASES = {
 
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -120,8 +112,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -132,8 +122,6 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -157,18 +145,15 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 
 # Tipos de archivos permitidos
 ALLOWED_FILE_EXTENSIONS = [
-    'pdf', 'doc', 'docx', 'xls', 'xlsx', 
+    'pdf', 'doc', 'docx', 'xls', 'xlsx',
     'jpg', 'jpeg', 'png', 'gif', 'bmp',
     'txt', 'zip', 'rar'
 ]
 
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#para desarrollo local (usando Gmail)
 #email config desde entorno
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
@@ -178,16 +163,13 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Ticketly <ticketly@gmail.com>')
 
-# Para testing (imprime emails en consola en lugar de enviarlos)
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 # URL base para links en emails
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:4200')
 
 #CORS settings
 CORS_ALLOWED_ORIGINS = [o for o in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:4200,http://127.0.0.1:4200').split(',') if o]
 
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = False if DEBUG else os.getenv('CORS_ALLOW_CREDENTIALS', 'False').lower() == 'true'
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -216,6 +198,9 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'Fa
 SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False').lower() == 'true'
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = os.getenv('X_FRAME_OPTIONS', 'DENY')
+
+# Proxy / HTTPS detrás de balanceador
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Validación de email en producción
 if not DEBUG:
@@ -293,6 +278,7 @@ REST_FRAMEWORK = {
         'anon': '10/minute',  # Límite para usuarios no autenticados (ej. endpoints de login/registro)
         'user': '1000/day'    # Límite para usuarios autenticados
     },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     #'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     #'PAGE_SIZE': 50,
 }
@@ -311,4 +297,12 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
+}
+
+# Documentación OpenAPI
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Ticketly API',
+    'DESCRIPTION': 'Backend de gestión de tickets (helpdesk) con usuarios, asignación, comentarios y adjuntos.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }

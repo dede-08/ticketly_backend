@@ -133,3 +133,43 @@ class SecurityPermissionsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+
+class AuthAndReadOnlyTestCase(TestCase):
+    """registro de usuarios y endpoints de solo lectura"""
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_register_returns_tokens(self):
+        response = self.client.post(
+            reverse('register'),
+            {
+                'username': 'nuevo_usuario',
+                'password': 'Segura123!',
+                'password2': 'Segura123!',
+                'email': 'nuevo@example.com',
+                'first_name': 'Nuevo',
+                'last_name': 'Usuario',
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertIn('access', response.data['tokens'])
+        self.assertIn('refresh', response.data['tokens'])
+
+    def test_statistics_forbidden_for_normal_user(self):
+        user = User.objects.create_user(username='normal', password='password123')
+        self.client.force_authenticate(user=user)
+        response = self.client.get(reverse('ticket-statistics'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_categories_are_read_only(self):
+        user = User.objects.create_user(username='staff', password='password123', is_staff=True)
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            reverse('category-list'),
+            {'name': 'Nueva Categoría', 'description': 'test'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 405)
+

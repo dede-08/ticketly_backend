@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from drf_spectacular.utils import extend_schema_field
 from .models import Ticket, Category, Priority, Status, Comment, TicketHistory, Attachment
 from .permissions import is_staff_or_higher
 
@@ -75,6 +76,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
+    get_file_url = extend_schema_field(serializers.URLField(allow_null=True))(get_file_url)
 
 
 class TicketListSerializer(serializers.ModelSerializer):
@@ -128,6 +130,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
         if request and not is_staff_or_higher(request.user):
             comments = [c for c in comments if not c.is_internal]
         return CommentSerializer(comments, many=True, read_only=True).data
+    get_comments = extend_schema_field(CommentSerializer(many=True, read_only=True))(get_comments)
 
     def update(self, instance, validated_data):
         category_data = validated_data.pop('category', None)

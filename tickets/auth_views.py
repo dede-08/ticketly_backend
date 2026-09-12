@@ -1,9 +1,10 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiTypes
 from .auth_serializers import RegisterSerializer, UserDetailSerializer, ChangePasswordSerializer
 
 
@@ -73,6 +74,10 @@ class ChangePasswordView(generics.UpdateAPIView):
         }, status=status.HTTP_200_OK)
 
 
+@extend_schema(
+    request=inline_serializer('LogoutRequest', {'refresh': serializers.CharField()}),
+    responses={200: inline_serializer('LogoutResponse', {'message': serializers.CharField()})},
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
@@ -91,6 +96,10 @@ def logout_view(request):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(
+    request=None,
+    responses={200: OpenApiTypes.OBJECT},
+)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_info_view(request):
